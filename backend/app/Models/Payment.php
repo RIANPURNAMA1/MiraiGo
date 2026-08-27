@@ -13,7 +13,10 @@ class Payment extends Model
 
     protected function casts(): array
     {
-        return ['meta' => 'array'];
+        return [
+            'meta' => 'array',
+            'reviewed_at' => 'datetime',
+        ];
     }
 
     public function transaction()

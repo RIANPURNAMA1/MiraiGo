@@ -1,19 +1,34 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/stores/AuthContext';
+import { fetchAdminPendingPaymentCount } from '@/services/admin';
 
-interface NavItemData { to: string; label: string; icon: string; }
+interface NavItemData { to: string; label: string; icon: string; badge?: number; }
 interface NavGroupData { label: string; items: NavItemData[]; }
 
 const groups: NavGroupData[] = [
   {
-    label: 'Konten',
+    label: 'Konten Soal',
     items: [
       { to: '/admin/categories', label: 'Kategori Soal', icon: 'tag' },
-      { to: '/admin/module-categories', label: 'Kategori Modul', icon: 'tag' },
       { to: '/admin/packages', label: 'Paket', icon: 'package' },
-      { to: '/admin/modules', label: 'Modul', icon: 'book' },
       { to: '/admin/questions', label: 'Soal', icon: 'list' },
+    ],
+  },
+  {
+    label: 'Konten Modul',
+    items: [
+      { to: '/admin/module-categories', label: 'Kategori Modul', icon: 'tag' },
+      { to: '/admin/modules', label: 'Modul', icon: 'book' },
+      { to: '/admin/module-premium', label: 'Akses Modul Premium', icon: 'star' },
+    ],
+  },
+  {
+    label: 'Konten Kotoba',
+    items: [
+      { to: '/admin/kotoba-categories', label: 'Kategori Kotoba', icon: 'book' },
+      { to: '/admin/kotoba-topics', label: 'Topik Kotoba', icon: 'list' },
+      { to: '/admin/kotoba', label: 'Soal Kotoba', icon: 'list' },
     ],
   },
   {
@@ -61,7 +76,8 @@ function Icon({ name, size = 18 }: { name: string; size?: number }) {
   );
 }
 
-function NavItem({ item, collapsed, className = '' }: { item: NavItemData; collapsed: boolean; className?: string }) {
+function NavItem({ item, collapsed, badgeOverride, className = '' }: { item: NavItemData; collapsed: boolean; badgeOverride?: number; className?: string }) {
+  const badge = badgeOverride !== undefined ? badgeOverride : item.badge;
   return (
     <NavLink
       to={item.to}
@@ -69,12 +85,21 @@ function NavItem({ item, collapsed, className = '' }: { item: NavItemData; colla
       title={collapsed ? item.label : undefined}
       className={({ isActive }) =>
         `flex items-center rounded-md py-2 text-sm font-medium transition-colors ${
-          collapsed ? 'justify-center px-2' : 'gap-2.5 px-3'
+          collapsed ? 'relative justify-center px-2' : 'gap-2.5 px-3'
         } ${isActive ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} ${className}`
       }
     >
       <Icon name={item.icon} />
-      {!collapsed && <span>{item.label}</span>}
+      {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
+      {badge ? (
+        <span
+          className={`ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[11px] font-bold text-white ${
+            collapsed ? 'absolute top-0 right-0' : ''
+          }`}
+        >
+          {badge > 99 ? '99+' : badge}
+        </span>
+      ) : null}
     </NavLink>
   );
 }
@@ -83,10 +108,12 @@ function NavGroup({
   group,
   collapsed,
   defaultOpen = false,
+  badges = {},
 }: {
   group: NavGroupData;
   collapsed: boolean;
   defaultOpen?: boolean;
+  badges?: Record<string, number>;
 }) {
   const location = useLocation();
   const isActive = group.items.some((item) =>
@@ -98,7 +125,7 @@ function NavGroup({
     return (
       <div className="space-y-0.5">
         {group.items.map((item) => (
-          <NavItem key={item.to} item={item} collapsed />
+          <NavItem key={item.to} item={item} collapsed badgeOverride={badges[item.to]} />
         ))}
       </div>
     );
@@ -119,12 +146,12 @@ function NavGroup({
       </button>
       <div
         className={`overflow-hidden transition-all duration-200 ${
-          open ? 'max-h-60 opacity-100' : 'max-h-0 opacity-0'
+          open ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
         }`}
       >
         <div className="ml-2 space-y-0.5 border-l border-gray-100 pl-2">
           {group.items.map((item) => (
-            <NavItem key={item.to} item={item} collapsed={false} />
+            <NavItem key={item.to} item={item} collapsed={false} badgeOverride={badges[item.to]} />
           ))}
         </div>
       </div>
@@ -136,6 +163,27 @@ export function AdminLayout() {
   const { logout } = useAuth();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
+  const [pendingPayments, setPendingPayments] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    async function load() {
+      try {
+        const count = await fetchAdminPendingPaymentCount();
+        if (active) setPendingPayments(count);
+      } catch {
+        /* ignore */
+      }
+    }
+    load();
+    const id = setInterval(load, 30000);
+    return () => {
+      active = false;
+      clearInterval(id);
+    };
+  }, []);
+
+  const badges = { '/admin/payments': pendingPayments };
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -161,7 +209,7 @@ export function AdminLayout() {
             </div>
 
             {groups.map((group) => (
-              <NavGroup key={group.label} group={group} collapsed={collapsed} defaultOpen />
+              <NavGroup key={group.label} group={group} collapsed={collapsed} defaultOpen badges={badges} />
             ))}
 
             {/* Divider */}

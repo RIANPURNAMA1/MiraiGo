@@ -36,7 +36,8 @@ export default function LatihanSoal() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-  const [showModuleAlert, setShowModuleAlert] = useState(true);
+  const [showModuleAlert, setShowModuleAlert] = useState(false);
+  const [packagesLoaded, setPackagesLoaded] = useState(false);
   const [upgradePkg, setUpgradePkg] = useState<Package | null>(null);
   const navigate = useNavigate();
 
@@ -47,14 +48,22 @@ export default function LatihanSoal() {
   }, []);
 
   useEffect(() => {
-    if (!selectedCategory) return;
+    if (!selectedCategory) {
+      setPackagesLoaded(false);
+      return;
+    }
     setIsLoading(true);
+    setPackagesLoaded(false);
     const t = setTimeout(() => {
       fetchPackages({ search: search || undefined, category: selectedCategory, page })
         .then((res) => {
           setItems(res.items);
         })
-        .finally(() => setIsLoading(false));
+        .finally(() => {
+          setIsLoading(false);
+          setPackagesLoaded(true);
+          setShowModuleAlert(true);
+        });
     }, 300);
     return () => clearTimeout(t);
   }, [selectedCategory, search, page]);
@@ -62,7 +71,7 @@ export default function LatihanSoal() {
   const selectedCat = categories.find((c) => c.slug === selectedCategory);
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-6xl space-y-8 pb-12">
       {/* Header */}
       <div>
         <h2 className="text-2xl font-semibold text-gray-900">Latihan Soal</h2>
@@ -99,7 +108,6 @@ export default function LatihanSoal() {
                 setSelectedCategory(cat.slug);
                 setSearch('');
                 setPage(1);
-                setShowModuleAlert(true);
               }}
               className="group flex items-center gap-4 rounded-md border border-gray-200 bg-white p-5 text-left shadow-sm transition-all hover:border-gray-300 hover:shadow-md"
             >
@@ -155,6 +163,8 @@ export default function LatihanSoal() {
               setSelectedCategory(null);
               setItems([]);
               setSearch('');
+              setShowModuleAlert(false);
+              setPackagesLoaded(false);
             }}
             className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900"
           >
@@ -290,7 +300,12 @@ function LatihanCard({ pkg, onUpgrade }: { pkg: Package; onUpgrade?: () => void 
               Terkunci
             </span>
           ) : pkg.is_premium ? (
-            <Badge variant="brand">Premium</Badge>
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-400 px-2.5 py-0.5 text-xs font-semibold text-amber-700 ring-1 ring-inset ring-amber-300">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1">
+                <path d="M2 18h20v2H2v-2zm.6-11l4.1 3.2L12 6l5.3 4.2L21.4 7l-1.6 9H4.2L2.6 7z"/>
+              </svg>
+              Premium
+            </span>
           ) : null}
         </div>
 

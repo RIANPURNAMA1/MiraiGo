@@ -25,7 +25,7 @@ export default function History() {
   }, [page]);
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-6xl space-y-8 pb-12">
       <div>
         <h2 className="text-2xl font-semibold text-gray-900">Riwayat Latihan</h2>
         <p className="text-sm text-gray-500">Semua percobaan quiz yang sudah Anda selesaikan.</p>

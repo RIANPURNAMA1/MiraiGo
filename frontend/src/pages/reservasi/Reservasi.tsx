@@ -34,7 +34,7 @@ export default function Reservasi() {
   const [items] = useState<Reservasi[]>(dummyReservasi);
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-6xl space-y-8 pb-12">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-2xl font-semibold text-gray-900">Reservasi</h2>

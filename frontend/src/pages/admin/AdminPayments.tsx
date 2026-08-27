@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Alert } from '@/components/ui/Alert';
 import { LoadingState } from '@/components/ui/LoadingState';
 import { Modal } from '@/components/ui/Modal';
-import { fetchAdminPayments, approvePayment, rejectPayment } from '@/services/admin';
+import { fetchAdminPayments, approvePayment, rejectPayment, approveModulePremiumPayment, rejectModulePremiumPayment } from '@/services/admin';
 import { ROOT_URL } from '@/services/api';
 import type { AdminPaymentItem } from '@/services/admin';
 import { getErrorMessage } from '@/services/api';
@@ -55,11 +55,18 @@ export default function AdminPayments() {
 
   async function confirmApprove() {
     if (!selectedPayment) return;
+    const isModule = selectedPayment.type === 'module-premium';
     setIsProcessing(true);
     setError(null);
     try {
-      await approvePayment(selectedPayment.id, adminNotes.trim() || undefined);
-      setSuccess('Pembayaran disetujui. Akses paket telah diberikan.');
+      if (isModule) {
+        await approveModulePremiumPayment(selectedPayment.id, adminNotes.trim() || undefined);
+      } else {
+        await approvePayment(selectedPayment.id, adminNotes.trim() || undefined);
+      }
+      setSuccess(isModule
+        ? 'Pembayaran disetujui. Akses modul premium telah diberikan.'
+        : 'Pembayaran disetujui. Akses paket telah diberikan.');
       setShowApproveModal(false);
       load();
     } catch (err) {
@@ -74,10 +81,15 @@ export default function AdminPayments() {
       setError('Catatan wajib diisi untuk penolakan.');
       return;
     }
+    const isModule = selectedPayment.type === 'module-premium';
     setIsProcessing(true);
     setError(null);
     try {
-      await rejectPayment(selectedPayment.id, adminNotes.trim());
+      if (isModule) {
+        await rejectModulePremiumPayment(selectedPayment.id, adminNotes.trim());
+      } else {
+        await rejectPayment(selectedPayment.id, adminNotes.trim());
+      }
       setSuccess('Pembayaran ditolak.');
       setShowRejectModal(false);
       load();
@@ -224,7 +236,11 @@ export default function AdminPayments() {
               <strong>{selectedPayment.transaction.items.map((i) => i.name).join(', ')}</strong> sebesar{' '}
               <strong>{formatCurrency(selectedPayment.transaction.total_amount)}</strong>.
             </p>
-            <p className="text-sm text-gray-600">Akses paket akan aktif selama 30 hari.</p>
+            <p className="text-sm text-gray-600">
+              {selectedPayment.type === 'module-premium'
+                ? 'Akses Modul Premium akan aktif untuk selamanya.'
+                : 'Akses paket akan aktif selama 30 hari.'}
+            </p>
             <div>
               <label className="mb-1.5 block text-sm font-medium text-gray-700">Catatan admin <span className="text-gray-400">(opsional)</span></label>
               <textarea

@@ -12,12 +12,22 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\HistoryController;
+use App\Http\Controllers\Api\KotobaCategoryController;
+use App\Http\Controllers\Api\KotobaController;
+use App\Http\Controllers\Api\KotobaTopicController;
 use App\Http\Controllers\Api\ModuleController;
+use App\Http\Controllers\Api\ModulePremiumController;
+use App\Http\Controllers\Api\ModulePremiumPaymentController;
 use App\Http\Controllers\Api\PackageController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ManualPaymentController;
 use App\Http\Controllers\Api\VoucherController;
 use App\Http\Controllers\Api\Admin\PaymentApprovalController;
+use App\Http\Controllers\Api\Admin\AdminKotobaCategoryController;
+use App\Http\Controllers\Api\Admin\AdminKotobaController;
+use App\Http\Controllers\Api\Admin\AdminKotobaTopicController;
+use App\Http\Controllers\Api\Admin\AdminModulePremiumController;
+use App\Http\Controllers\Api\Admin\AdminModulePremiumPaymentController;
 use App\Http\Controllers\Api\Admin\VoucherManagementController as AdminVoucherController;
 use App\Http\Controllers\Api\Admin\CategoryManagementController as AdminCategoryController;
 use App\Http\Controllers\Api\ProfileController;
@@ -51,6 +61,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/categories', [CategoryController::class, 'index']);
 
+    Route::get('/kotoba-categories', [KotobaCategoryController::class, 'index']);
+
+    Route::get('/kotoba-topics', [KotobaTopicController::class, 'index']);
+
+    Route::get('/kotoba', [KotobaController::class, 'index']);
+
     Route::post('/attempts', [AttemptController::class, 'store']);
     Route::get('/attempts/{attempt}', [AttemptController::class, 'show']);
     Route::post('/attempts/{attempt}/answers', [AttemptController::class, 'saveAnswer']);
@@ -64,6 +80,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/subscription', [SubscriptionController::class, 'index']);
     Route::get('/payments', [PaymentController::class, 'index']);
     Route::get('/manual-payments', [ManualPaymentController::class, 'index']);
+
+    Route::get('/module-premium-settings', [ModulePremiumController::class, 'settings']);
+    Route::get('/module-premium-access', [ModulePremiumController::class, 'access']);
+    Route::post('/module-premium-access/purchase', [ModulePremiumController::class, 'purchase']);
+    Route::get('/module-premium-payments', [ModulePremiumPaymentController::class, 'index']);
+    Route::post('/module-premium-payments', [ModulePremiumPaymentController::class, 'store']);
     Route::post('/manual-payments', [ManualPaymentController::class, 'store']);
     Route::post('/vouchers/validate', [VoucherController::class, 'validate']);
 
@@ -93,6 +115,25 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/categories/{category}', [AdminCategoryController::class, 'destroy']);
         Route::post('/categories/{category}/toggle-active', [AdminCategoryController::class, 'toggleActive']);
 
+        Route::get('/kotoba-categories', [AdminKotobaCategoryController::class, 'index']);
+        Route::post('/kotoba-categories', [AdminKotobaCategoryController::class, 'store']);
+        Route::put('/kotoba-categories/{kotobaCategory}', [AdminKotobaCategoryController::class, 'update']);
+        Route::delete('/kotoba-categories/{kotobaCategory}', [AdminKotobaCategoryController::class, 'destroy']);
+        Route::post('/kotoba-categories/{kotobaCategory}/toggle-active', [AdminKotobaCategoryController::class, 'toggleActive']);
+
+        Route::get('/kotoba', [AdminKotobaController::class, 'index']);
+        Route::post('/kotoba', [AdminKotobaController::class, 'store']);
+        Route::put('/kotoba/{kotoba}', [AdminKotobaController::class, 'update']);
+        Route::delete('/kotoba/{kotoba}', [AdminKotobaController::class, 'destroy']);
+        Route::post('/kotoba/{kotoba}/toggle-active', [AdminKotobaController::class, 'toggleActive']);
+
+        Route::get('/kotoba-topics', [AdminKotobaTopicController::class, 'index']);
+        Route::post('/kotoba-topics', [AdminKotobaTopicController::class, 'store']);
+        Route::put('/kotoba-topics/{kotobaTopic}', [AdminKotobaTopicController::class, 'update']);
+        Route::delete('/kotoba-topics/{kotobaTopic}', [AdminKotobaTopicController::class, 'destroy']);
+        Route::post('/kotoba-topics/{kotobaTopic}/toggle-active', [AdminKotobaTopicController::class, 'toggleActive']);
+        Route::post('/kotoba-topics/{kotobaTopic}/sync-words', [AdminKotobaTopicController::class, 'syncWords']);
+
         Route::get('/packages', [AdminPackageController::class, 'index']);
         Route::post('/packages', [AdminPackageController::class, 'store']);
         Route::put('/packages/{package}', [AdminPackageController::class, 'update']);
@@ -118,6 +159,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/subscribers', [AdminSubscriptionController::class, 'index']);
 
         Route::get('/payments', [PaymentApprovalController::class, 'index']);
+        Route::get('/payments/pending-count', [PaymentApprovalController::class, 'pendingCount']);
         Route::post('/payments/{payment}/approve', [PaymentApprovalController::class, 'approve']);
         Route::post('/payments/{payment}/reject', [PaymentApprovalController::class, 'reject']);
 
@@ -136,5 +178,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/modules/{module}', [\App\Http\Controllers\Api\Admin\AdminModuleManagementController::class, 'update']);
         Route::delete('/modules/{module}', [\App\Http\Controllers\Api\Admin\AdminModuleManagementController::class, 'destroy']);
         Route::post('/modules/{module}/toggle-publish', [\App\Http\Controllers\Api\Admin\AdminModuleManagementController::class, 'togglePublish']);
+
+        Route::get('/module-premium-settings', [AdminModulePremiumController::class, 'settings']);
+        Route::put('/module-premium-settings', [AdminModulePremiumController::class, 'updateSettings']);
+
+        Route::get('/module-premium-payments', [AdminModulePremiumPaymentController::class, 'index']);
+        Route::post('/module-premium-payments/{payment}/approve', [AdminModulePremiumPaymentController::class, 'approve']);
+        Route::post('/module-premium-payments/{payment}/reject', [AdminModulePremiumPaymentController::class, 'reject']);
     });
 });

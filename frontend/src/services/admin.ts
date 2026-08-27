@@ -8,6 +8,9 @@ import {
   AdminUserItem,
   ApiSuccess,
   Category,
+  KotobaCategory,
+  KotobaItem,
+  KotobaInput,
   PaginatedResponse,
   PackageSection,
   Question,
@@ -144,6 +147,7 @@ export async function fetchAdminSubscribers(filters: AdminSubscriberFilters = {}
 
 export interface AdminPaymentItem {
   id: number;
+  type?: 'package' | 'module-premium';
   transaction: {
     id: number;
     invoice_number: string;
@@ -163,6 +167,11 @@ export interface AdminPaymentItem {
 export async function fetchAdminPayments() {
   const res = await api.get<ApiSuccess<{ payments: AdminPaymentItem[]; total: number }>>('/admin/payments');
   return res.data.data;
+}
+
+export async function fetchAdminPendingPaymentCount() {
+  const res = await api.get<ApiSuccess<{ count: number }>>('/admin/payments/pending-count');
+  return res.data.data.count;
 }
 
 export async function approvePayment(id: number, adminNotes?: string) {
@@ -328,5 +337,69 @@ export async function updateAdminModuleCategory(id: number, input: { name: strin
 
 export async function deleteAdminModuleCategory(id: number) {
   const res = await api.delete<ApiSuccess<null>>(`/admin/module-categories/${id}`);
+  return res.data;
+}
+
+// ── Kotoba Categories ──────────────────────────────────────────────
+export async function fetchAdminKotobaCategories() {
+  const res = await api.get<ApiSuccess<KotobaCategory[]>>('/admin/kotoba-categories');
+  return res.data.data;
+}
+
+export async function createAdminKotobaCategory(input: Partial<KotobaCategory>) {
+  const res = await api.post<ApiSuccess<KotobaCategory>>('/admin/kotoba-categories', input);
+  return res.data.data;
+}
+
+export async function updateAdminKotobaCategory(id: number, input: Partial<KotobaCategory>) {
+  const res = await api.put<ApiSuccess<KotobaCategory>>(`/admin/kotoba-categories/${id}`, input);
+  return res.data.data;
+}
+
+export async function deleteAdminKotobaCategory(id: number) {
+  const res = await api.delete<ApiSuccess<null>>(`/admin/kotoba-categories/${id}`);
+  return res.data;
+}
+
+export async function toggleAdminKotobaCategory(id: number) {
+  const res = await api.post<ApiSuccess<KotobaCategory>>(`/admin/kotoba-categories/${id}/toggle-active`);
+  return res.data.data;
+}
+
+// ── Kotoba Words ───────────────────────────────────────────────────
+export async function fetchAdminKotoba(filters?: { category_id?: number; search?: string; page?: number; per_page?: number }) {
+  const res = await api.get<ApiSuccess<PaginatedResponse<KotobaItem>>>('/admin/kotoba', { params: filters });
+  return res.data.data;
+}
+
+export async function createAdminKotoba(input: KotobaInput) {
+  const res = await api.post<ApiSuccess<KotobaItem>>('/admin/kotoba', input);
+  return res.data.data;
+}
+
+export async function updateAdminKotoba(id: number, input: KotobaInput) {
+  const res = await api.put<ApiSuccess<KotobaItem>>(`/admin/kotoba/${id}`, input);
+  return res.data.data;
+}
+
+export async function deleteAdminKotoba(id: number) {
+  const res = await api.delete<ApiSuccess<null>>(`/admin/kotoba/${id}`);
+  return res.data;
+}
+
+export async function toggleAdminKotoba(id: number) {
+  const res = await api.post<ApiSuccess<KotobaItem>>(`/admin/kotoba/${id}/toggle-active`);
+  return res.data.data;
+}
+
+// ── Module Premium Payment Approval ──
+
+export async function approveModulePremiumPayment(id: number, adminNotes?: string) {
+  const res = await api.post<ApiSuccess<Record<string, never>>>(`/admin/module-premium-payments/${id}/approve`, { admin_notes: adminNotes });
+  return res.data;
+}
+
+export async function rejectModulePremiumPayment(id: number, adminNotes: string) {
+  const res = await api.post<ApiSuccess<Record<string, never>>>(`/admin/module-premium-payments/${id}/reject`, { admin_notes: adminNotes });
   return res.data;
 }

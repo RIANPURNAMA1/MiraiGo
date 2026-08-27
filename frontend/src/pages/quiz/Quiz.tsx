@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
@@ -21,9 +21,35 @@ export default function Quiz() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showFinalConfirm, setShowFinalConfirm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [flagged, setFlagged] = useState<Set<number>>(new Set());
   const [showCalc, setShowCalc] = useState(false);
+  const shuffledRef = useRef(false);
+
+  function shuffleArray<T>(arr: T[]): T[] {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function shuffleBySection(qs: Question[]): Question[] {
+    const map = new Map<string, Question[]>();
+    qs.forEach(q => {
+      const arr = map.get(q.section_name) ?? [];
+      arr.push({
+        ...q,
+        options: q.selected_option_id ? q.options : shuffleArray(q.options),
+      });
+      map.set(q.section_name, arr);
+    });
+    const result: Question[] = [];
+    map.forEach(arr => result.push(...shuffleArray(arr)));
+    return result;
+  }
 
   const load = useCallback(() => {
     if (!attemptId) return;
@@ -31,6 +57,11 @@ export default function Quiz() {
     fetchAttempt(Number(attemptId))
       .then(({ attempt, questions }) => {
         setAttempt(attempt);
+        const hasAnswers = questions.some(q => q.selected_option_id);
+        if (!hasAnswers && !shuffledRef.current) {
+          questions = shuffleBySection(questions);
+          shuffledRef.current = true;
+        }
         setQuestions(questions);
         if (attempt.status !== 'in_progress') {
           navigate(`/results/${attempt.id}`, { replace: true });
@@ -104,6 +135,28 @@ export default function Quiz() {
     }
   }
 
+  const currentSectionIndex = sections.findIndex((s) => s.name === currentSectionName);
+  const isLastSection = currentSectionIndex === sections.length - 1;
+
+  function handleFinishSection() {
+    setShowConfirm(true);
+  }
+
+  function handleConfirmFinishSection() {
+    setShowConfirm(false);
+    setShowFinalConfirm(true);
+  }
+
+  function handleFinalFinishSection() {
+    setShowFinalConfirm(false);
+    if (isLastSection) {
+      handleSubmit();
+    } else {
+      const nextSection = sections[currentSectionIndex + 1];
+      setCurrentIndex(nextSection.startIndex);
+    }
+  }
+
   async function handleSubmit() {
     if (!attempt) return;
     setIsSubmitting(true);
@@ -157,7 +210,7 @@ export default function Quiz() {
         </div>
 
         <button
-          onClick={() => setShowConfirm(true)}
+          onClick={handleFinishSection}
           className="rounded bg-[#f0c885] px-4 py-1.5 text-sm font-bold text-gray-900 transition-colors hover:bg-[#e0b875]"
         >
           Finish Section
@@ -183,74 +236,87 @@ export default function Quiz() {
 
       <div className="flex flex-1 overflow-hidden">
         {/* ── Left Sidebar Navigator ── */}
-        <aside className="w-[130px] shrink-0 overflow-y-auto bg-white py-4 shadow-[2px_0_5px_rgba(0,0,0,0.05)] z-10 flex flex-col gap-6">
-          {sections.map((section) => {
-            const localOffset = section.startIndex;
-            const shortName = section.name.substring(0, 2) + '...';
+        <aside className="w-[130px] shrink-0 overflow-y-auto z-10 relative">
+          <div className="flex">
+            {/* Background putih full height */}
+            <div className="absolute inset-y-0 left-0 w-10 bg-white" />
 
-            return (
-              <div key={section.name} className="flex w-full px-2">
-                {/* Kolom Kiri: Label dan Garis Abu-abu (tanpa bar hijau) */}
-                <div className="w-10 shrink-0 flex flex-col items-center">
-                  <p className="text-[12px] font-medium text-gray-500 mb-1">
-                    {shortName}
-                  </p>
-                  {/* Garis tebal vertikal */}
-                  <div className="w-2.5 flex-1 rounded-full bg-[#e2e4e8]" />
-                </div>
+            {/* Kolom Kiri: Label section */}
+            <div className="w-10 shrink-0 py-4 mr-2 flex flex-col relative z-10">
+              {sections.map((section) => {
+                const shortName = section.name.substring(0, 2) + '...';
+                const pct = section.total > 0 ? (section.answered / section.total) * 100 : 0;
+                return (
+                  <div key={section.name} className="flex flex-col items-center px-2" style={{ flex: section.total }}>
+                    <p className={`text-[12px] mb-1 ${section.name === currentSectionName ? 'font-bold text-black' : 'font-medium text-gray-500'}`}>
+                      {shortName}
+                    </p>
+                    <div className="w-2.5 flex-1 rounded-full bg-[#e2e4e8] relative overflow-hidden">
+                      <div
+                        className="absolute bottom-0 left-0 w-full rounded-full bg-[#5e8b5d] transition-all duration-300"
+                        style={{ height: `${pct}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
 
-                {/* Kolom Kanan: Tombol-tombol berbentuk panah */}
-                <div className="flex-1 flex flex-col gap-2 py-1 pl-1">
-                  {questions
-                    .map((q, idx) => ({ q, idx }))
-                    .filter(({ q }) => q.section_name === section.name)
-                    .map(({ q, idx }) => {
-                      const isActive = idx === currentIndex;
-                      const isAnswered = !!q.selected_option_id;
-                      const isFlagged = flagged.has(idx);
-                      const localNum = idx - localOffset + 1;
+            {/* Kolom Kanan: Tombol-tombol soal */}
+            <div className="flex-1 py-4 pl-1 flex flex-col">
+              {sections.map((section) => {
+                const localOffset = section.startIndex;
+                const sectionCount = questions.filter(q => q.section_name === section.name).length;
+                return (
+                  <div key={section.name} className="flex flex-col gap-2 py-1" style={{ flex: sectionCount }}>
+                    {questions
+                      .map((q, idx) => ({ q, idx }))
+                      .filter(({ q }) => q.section_name === section.name)
+                      .map(({ q, idx }) => {
+                        const isActive = idx === currentIndex;
+                        const isAnswered = !!q.selected_option_id;
+                        const isFlagged = flagged.has(idx);
+                        const localNum = idx - localOffset + 1;
 
-                      // Warna background: hijau standar, gelap jika sudah dijawab dan tidak aktif
-                      let bgColor = '#5e8b5d';
-                      if (isAnswered && !isActive) bgColor = '#474747';
+                        let bgColor = '#5e8b5d';
+                        if (isAnswered && !isActive) bgColor = '#474747';
 
-                      return (
-                        <div key={q.id} className="flex items-center">
-                          <button
-                            onClick={() => setCurrentIndex(idx)}
-                            className="relative flex h-[28px] w-[56px] items-center justify-center rounded text-[13px] font-bold text-white transition-all hover:opacity-90"
-                            style={{ backgroundColor: bgColor }}
-                          >
-                            <span className="w-full text-center">{localNum}</span>
+                        return (
+                          <div key={q.id} className="flex items-center">
+                            <button
+                              onClick={() => setCurrentIndex(idx)}
+                              className="relative flex h-[28px] w-[56px] items-center justify-center rounded text-[13px] font-bold text-white transition-all hover:opacity-90"
+                              style={{ backgroundColor: bgColor }}
+                            >
+                              <span className="w-full text-center">{localNum}</span>
 
-                            {/* Ikon Flag/Bendera */}
-                            {isFlagged && (
+                              {isFlagged && (
+                                <svg
+                                  className="absolute top-1 right-[14px] h-[10px] w-[10px] fill-[#fde047] drop-shadow-sm"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z" />
+                                </svg>
+                              )}
+                            </button>
+
+                            {isActive && (
                               <svg
-                                className="absolute top-1 right-[14px] h-[10px] w-[10px] fill-[#fde047] drop-shadow-sm"
-                                viewBox="0 0 24 24"
+                                className="h-[14px] w-[10px] shrink-0"
+                                viewBox="0 0 10 14"
+                                fill={bgColor}
                               >
-                                <path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z" />
+                                <path d="M0 0L10 7L0 14z" />
                               </svg>
                             )}
-                          </button>
-
-                          {/* Segitiga indikator active */}
-                          {isActive && (
-                            <svg
-                              className="h-[14px] w-[10px] shrink-0"
-                              viewBox="0 0 10 14"
-                              fill={bgColor}
-                            >
-                              <path d="M0 0L10 7L0 14z" />
-                            </svg>
-                          )}
-                        </div>
-                      );
-                    })}
-                </div>
-              </div>
-            );
-          })}
+                          </div>
+                        );
+                      })}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </aside>
 
         {/* ── Main Question Content ── */}
@@ -404,7 +470,7 @@ export default function Quiz() {
 
           <div className="space-y-3">
             <button
-              onClick={handleSubmit}
+              onClick={handleConfirmFinishSection}
               disabled={isSubmitting}
               className="w-full rounded-lg bg-[#5e8b5d] py-3 text-sm font-semibold text-white transition-colors hover:bg-[#4d7a4c] disabled:opacity-60"
             >
@@ -416,6 +482,44 @@ export default function Quiz() {
               className="w-full rounded-lg bg-gray-100 py-3 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-200 disabled:opacity-60"
             >
               No, I would like to return to this section
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ── Final Confirm modal ── */}
+      <Modal isOpen={showFinalConfirm} onClose={() => setShowFinalConfirm(false)}>
+        <div className="px-2 py-2 text-center">
+          <p className="mx-auto mb-4 inline-block rounded-lg bg-gray-100 px-6 py-2 text-base font-semibold text-gray-800">
+            Confirm Finish Section
+          </p>
+
+          <div className="mb-4 flex justify-center">
+            <svg className="h-10 w-10 text-yellow-500" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
+            </svg>
+          </div>
+
+          <p className="mb-4 text-xs text-gray-400">MiraiGo.com</p>
+
+          <p className="mb-6 text-sm leading-relaxed text-gray-700">
+            If you select <strong>Finish Section</strong>, your answers will be submitted and you will not be able to return to this section.
+          </p>
+
+          <div className="space-y-3">
+            <button
+              onClick={handleFinalFinishSection}
+              disabled={isSubmitting}
+              className="w-full rounded-lg bg-[#5e8b5d] py-3 text-sm font-semibold text-white transition-colors hover:bg-[#4d7a4c] disabled:opacity-60"
+            >
+              Finish Section
+            </button>
+            <button
+              onClick={() => setShowFinalConfirm(false)}
+              disabled={isSubmitting}
+              className="w-full rounded-lg bg-gray-100 py-3 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-200 disabled:opacity-60"
+            >
+              Cancel
             </button>
           </div>
         </div>

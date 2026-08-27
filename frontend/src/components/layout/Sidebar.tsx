@@ -25,8 +25,7 @@ const groups: NavGroupData[] = [
     label: 'Akun Saya',
     items: [
       { to: '/history', label: 'Riwayat Tes', icon: 'clock' },
-      { to: '/subscription', label: 'Langganan', icon: 'star' },
-      { to: '/upgrade-akses', label: 'Upgrade Akses', icon: 'crown' },
+      { to: '/subscription', label: 'Upgrade Aksess', icon: 'crown' },
       { to: '/payments', label: 'Pembayaran', icon: 'card' },
     ],
   },

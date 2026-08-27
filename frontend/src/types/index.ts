@@ -290,3 +290,47 @@ export interface AdminSubscriberItem {
   expires_at: string | null;
   days_left: number | null;
 }
+
+export interface KotobaCategory {
+  id: number;
+  name: string;
+  description: string | null;
+  type: 'JFT' | 'SSW';
+  total_words: number;
+  total_packages: number;
+  icon: string | null;
+  color: string;
+  order: number;
+  is_active: boolean;
+}
+
+export interface KotobaItem {
+  id: number;
+  category_id: number;
+  category?: KotobaCategory;
+  japanese: string;
+  reading: string | null;
+  meaning: string;
+  example_sentence: string | null;
+  example_translation: string | null;
+  order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export type KotobaInput = Omit<KotobaItem, 'id' | 'category' | 'created_at' | 'updated_at'>;
+
+export interface KotobaTopic {
+  id: number;
+  category_id: number;
+  category?: KotobaCategory;
+  name: string;
+  description: string | null;
+  word_count: number;
+  order: number;
+  is_active: boolean;
+  kotoba?: KotobaItem[];
+}
+
+export type KotobaTopicInput = Omit<KotobaTopic, 'id' | 'category' | 'kotoba'>;

@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { LoadingState } from '@/components/ui/LoadingState';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { Pagination } from '@/components/ui/Pagination';
 import { WhatsAppButton } from '@/components/ui/WhatsAppButton';
 import { fetchDashboard } from '@/services/dashboard';
 import type { DashboardData } from '@/types';
@@ -39,6 +40,8 @@ export default function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [historyPage, setHistoryPage] = useState(1);
+  const PAGE_SIZE = 5;
 
   useEffect(() => {
     fetchDashboard()
@@ -48,6 +51,9 @@ export default function Dashboard() {
 
   if (isLoading) return <LoadingState label="Memuat dashboard..." />;
   if (!data) return <EmptyState title="Gagal memuat dashboard" description="Silakan muat ulang halaman." />;
+
+  const historyTotalPages = Math.ceil(data.recent_tests.length / PAGE_SIZE);
+  const pagedTests = data.recent_tests.slice((historyPage - 1) * PAGE_SIZE, historyPage * PAGE_SIZE);
 
   const name = user?.name ?? data.user.name;
 
@@ -139,7 +145,7 @@ export default function Dashboard() {
           )}
         </Card>
 
-        <div className="space-y-6">
+    <div className="mx-auto max-w-6xl space-y-8 pb-12">
           <Card>
             <h3 className="font-semibold text-gray-900">Streak</h3>
             <p className="mt-2 text-3xl font-bold text-brand-600">
@@ -183,9 +189,9 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50 text-sm">
-                {data.recent_tests.map((t, i) => (
+                {pagedTests.map((t, i) => (
                   <tr key={t.id} className="hover:bg-gray-50">
-                    <td className="px-5 py-3 text-gray-400">{i + 1}</td>
+                    <td className="px-5 py-3 text-gray-400">{(historyPage - 1) * PAGE_SIZE + i + 1}</td>
                     <td className="px-5 py-3 font-medium text-gray-900">{t.package}</td>
                     <td className="px-5 py-3 text-gray-700">{t.result ?? '-'}</td>
                     <td className="px-5 py-3 font-semibold text-gray-900">
@@ -215,6 +221,11 @@ export default function Dashboard() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+        {data.recent_tests.length > 0 && (
+          <div className="px-5 pb-4">
+            <Pagination currentPage={historyPage} lastPage={historyTotalPages} onChange={setHistoryPage} />
           </div>
         )}
       </Card>

@@ -60,7 +60,7 @@ export default function Payments() {
   if (!data) return <EmptyState title="Gagal memuat data" description="Silakan muat ulang halaman." />;
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-6xl space-y-8 pb-12">
       <div>
         <h2 className="text-2xl font-semibold text-gray-900">Pembayaran</h2>
         <p className="text-sm text-gray-500">Riwayat transaksi dan invoice Anda.</p>

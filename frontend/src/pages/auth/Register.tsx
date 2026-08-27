@@ -5,6 +5,21 @@ import { Alert } from '@/components/ui/Alert';
 import { register as registerApi } from '@/services/auth';
 import { getErrorMessage } from '@/services/api';
 
+interface Requirement {
+  label: string;
+  valid: boolean;
+}
+
+function usePasswordRequirements(password: string): Requirement[] {
+  return [
+    { label: 'Minimal 8 karakter', valid: password.length >= 8 },
+    { label: 'Terdapat minimal satu huruf kecil', valid: /[a-z]/.test(password) },
+    { label: 'Terdapat minimal satu huruf besar', valid: /[A-Z]/.test(password) },
+    { label: 'Terdapat minimal satu angka', valid: /\d/.test(password) },
+    { label: 'Terdapat salah satu simbol: ! @ # $ % ^ & *', valid: /[!@#$%^&*]/.test(password) },
+  ];
+}
+
 export default function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -15,13 +30,33 @@ export default function Register() {
   const [showPass, setShowPass] = useState(false);
   const navigate = useNavigate();
 
+  const requirements = usePasswordRequirements(password);
+  const passwordValid = requirements.every((r) => r.valid);
+  const isEmailFilled = !!email.trim();
+
+  function allValid() {
+    return !!name.trim() && isEmailFilled && passwordValid && password === confirm;
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+
+    if (!isEmailFilled) {
+      setError('Masukkan alamat email.');
+      return;
+    }
+
+    if (!passwordValid) {
+      setError('Password belum memenuhi semua persyaratan.');
+      return;
+    }
+
     if (password !== confirm) {
       setError('Konfirmasi password tidak cocok.');
       return;
     }
+
     setIsLoading(true);
     try {
       const data = await registerApi({
@@ -115,6 +150,26 @@ export default function Register() {
                   )}
                 </button>
               </div>
+
+              {/* Password requirements checklist */}
+              {password && (
+                <ul className="mt-2.5 space-y-1.5 rounded-lg border border-gray-100 bg-gray-50/60 p-3">
+                  {requirements.map((req) => (
+                    <li key={req.label} className="flex items-center gap-2 text-xs">
+                      <span
+                        className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${
+                          req.valid ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-200 text-gray-400'
+                        }`}
+                      >
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                          <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </span>
+                      <span className={req.valid ? 'font-medium text-emerald-700' : 'text-gray-500'}>{req.label}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
 
             <div>
@@ -128,9 +183,12 @@ export default function Register() {
                 minLength={8}
                 className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900 outline-none transition-colors placeholder:text-gray-400 focus:border-brand-500 focus:bg-white focus:ring-2 focus:ring-brand-100"
               />
+              {confirm && confirm !== password && (
+                <p className="mt-1.5 text-[11px] text-red-500">Password tidak cocok.</p>
+              )}
             </div>
 
-            <Button type="submit" className="w-full" size="lg" isLoading={isLoading}>
+            <Button type="submit" className="w-full" size="lg" isLoading={isLoading} disabled={!allValid()}>
               Daftar
             </Button>
           </form>

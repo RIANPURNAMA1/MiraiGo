@@ -16,6 +16,8 @@ import Practice from '@/pages/practice/Practice';
 import PackageDetail from '@/pages/practice/PackageDetail';
 import LatihanSoal from '@/pages/practice/LatihanSoal';
 import LatihanKotoba from '@/pages/practice/LatihanKotoba';
+import KotobaCategoryDetail from '@/pages/practice/KotobaCategoryDetail';
+import KotobaQuiz from '@/pages/practice/KotobaQuiz';
 import Reservasi from '@/pages/reservasi/Reservasi';
 import AksesModul from '@/pages/modul/AksesModul';
 import Quiz from '@/pages/quiz/Quiz';
@@ -28,6 +30,7 @@ import Subscription from '@/pages/subscription/Subscription';
 import Payments from '@/pages/payments/Payments';
 import Profile from '@/pages/profile/Profile';
 import Payment from '@/pages/payment/Payment';
+import PaymentModulePremium from '@/pages/payment/PaymentModulePremium';
 import AdminDashboard from '@/pages/admin/AdminDashboard';
 import AdminPackages from '@/pages/admin/AdminPackages';
 import AdminQuestions from '@/pages/admin/AdminQuestions';
@@ -39,6 +42,10 @@ import AdminSettings from '@/pages/admin/AdminSettings';
 import AdminCategories from '@/pages/admin/AdminCategories';
 import AdminModules from '@/pages/admin/AdminModules';
 import AdminModuleCategories from '@/pages/admin/AdminModuleCategories';
+import AdminKotobaCategories from '@/pages/admin/AdminKotobaCategories';
+import AdminKotoba from '@/pages/admin/AdminKotoba';
+import AdminKotobaTopics from '@/pages/admin/AdminKotobaTopics';
+import AdminModulePremium from '@/pages/admin/AdminModulePremium';
 import UpgradeAkses from '@/pages/practice/UpgradeAkses';
 
 function HomeRedirect() {
@@ -90,6 +97,8 @@ function AppRoutes() {
         <Route path="/latihan-soal" element={<LatihanSoal />} />
         <Route path="/upgrade-akses" element={<UpgradeAkses />} />
         <Route path="/latihan-kotoba" element={<LatihanKotoba />} />
+        <Route path="/latihan-kotoba/:categoryId" element={<KotobaCategoryDetail />} />
+        <Route path="/latihan-kotoba/:categoryId/quiz" element={<KotobaQuiz />} />
         <Route path="/reservasi" element={<Reservasi />} />
         <Route path="/akses-modul" element={<AksesModul />} />
         <Route path="/results/:attemptId" element={<Result />} />
@@ -111,6 +120,14 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/payment-module-premium"
+        element={
+          <ProtectedRoute>
+            <PaymentModulePremium />
+          </ProtectedRoute>
+        }
+      />
 
       <Route
         element={
@@ -125,10 +142,14 @@ function AppRoutes() {
         <Route path="/admin/modules" element={<AdminModules />} />
         <Route path="/admin/packages" element={<AdminPackages />} />
         <Route path="/admin/questions" element={<AdminQuestions />} />
+        <Route path="/admin/kotoba-categories" element={<AdminKotobaCategories />} />
+        <Route path="/admin/kotoba" element={<AdminKotoba />} />
+        <Route path="/admin/kotoba-topics" element={<AdminKotobaTopics />} />
         <Route path="/admin/users" element={<AdminUsers />} />
         <Route path="/admin/subscribers" element={<AdminSubscribers />} />
         <Route path="/admin/payments" element={<AdminPayments />} />
         <Route path="/admin/vouchers" element={<AdminVouchers />} />
+        <Route path="/admin/module-premium" element={<AdminModulePremium />} />
         <Route path="/admin/settings" element={<AdminSettings />} />
       </Route>
 

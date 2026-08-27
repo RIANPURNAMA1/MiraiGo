@@ -62,12 +62,7 @@ export default function Subscription() {
     ])
       .then(([subData, pkgRes]) => {
         setSub(subData);
-
-        const pkgs =
-          (pkgRes as unknown as { data: Package[] }).data ??
-          (pkgRes as unknown as Package[]);
-
-        setPackages(Array.isArray(pkgs) ? pkgs : []);
+        setPackages(Array.isArray(pkgRes.items) ? pkgRes.items : []);
       })
       .finally(() => {
         setIsLoading(false);
@@ -86,7 +81,7 @@ export default function Subscription() {
     sub?.accesses.filter((a) => a.status === 'active') ?? [];
 
   return (
-    <div className="space-y-7">
+    <div className="mx-auto max-w-6xl space-y-8 pb-12">
       {/* =====================================================
           HEADER
       ====================================================== */}
@@ -311,12 +306,15 @@ export default function Subscription() {
       ====================================================== */}
 
       <section id="premium-packages" ref={premiumRef}>
-        <div className="mb-4">
-          <h3 className="text-sm font-semibold text-gray-900">
-            Paket Premium
-          </h3>
+        <div className="mb-5">
+          <div className="flex items-center gap-2">
+            <Crown size={18} className="text-amber-500" />
+            <h3 className="text-base font-bold tracking-tight text-gray-900">
+              Upgrade Aksess 
+            </h3>
+          </div>
 
-          <p className="mt-0.5 text-xs text-gray-500">
+          <p className="mt-1 text-sm text-gray-500">
             Pilih paket yang sesuai dengan kebutuhan belajar Anda.
           </p>
         </div>
@@ -349,6 +347,7 @@ export default function Subscription() {
                 <PackageCard
                   key={pkg.id}
                   pkg={pkg}
+                  premium
                   owned={!!owned}
                 />
               );
@@ -398,77 +397,85 @@ export default function Subscription() {
 
 function PackageCard({
   pkg,
+  premium = false,
   owned,
 }: {
   pkg: Package;
+  premium?: boolean;
   owned: boolean;
 }) {
   return (
     <div
-      className={`group overflow-hidden rounded-md border bg-white shadow-sm transition-all ${
-        owned
-          ? 'border-gray-300'
-          : 'border-gray-200 hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-md'
+      className={`group relative flex flex-col overflow-hidden rounded-md border bg-white shadow-sm transition-all duration-300 ${
+        premium
+          ? owned
+            ? 'border-gray-300'
+            : 'border-gray-100 hover:-translate-y-1 hover:border-amber-200 hover:shadow-xl'
+          : owned
+            ? 'border-gray-300'
+            : 'border-gray-200 hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-md'
       }`}
     >
-      {/* Thumbnail */}
-      {pkg.thumbnail ? (
-        <img
-          src={pkg.thumbnail}
-          alt={pkg.name}
-          className="h-32 w-full object-cover"
-        />
-      ) : (
-        <div className="flex h-32 items-center justify-center border-b border-gray-100 bg-gray-50">
-          <Crown
-            size={28}
-            className="text-gray-300"
-          />
-        </div>
+      {/* Top accent */}
+      {premium && (
+        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber-300 via-amber-400 to-amber-300" />
       )}
 
-      <div className="p-5">
-        {/* Package Name */}
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h4 className="text-sm font-semibold text-gray-900">
-              {pkg.name}
-            </h4>
-
-            {pkg.level && (
-              <span className="mt-1.5 inline-flex rounded-md bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">
-                {pkg.level}
-              </span>
-            )}
+      {/* Header */}
+      <div className="px-6 pb-2 pt-7">
+        <div className="flex items-center gap-2.5">
+          <div
+            className={`flex h-10 w-10 items-center justify-center rounded-lg ring-1 ring-inset ${
+              premium
+                ? 'bg-amber-50 text-amber-500 ring-amber-100'
+                : 'bg-gray-50 text-gray-500 ring-gray-100'
+            }`}
+          >
+            {premium ? <Crown size={18} /> : <ShieldCheck size={18} />}
           </div>
-
-          <Crown
-            size={17}
-            className="shrink-0 text-gray-300"
-          />
+          {premium && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-semibold text-amber-700 ring-1 ring-inset ring-amber-200">
+              <Crown size={11} />
+              Premium
+            </span>
+          )}
         </div>
 
-        {/* Description */}
+        <div className="mt-4 flex items-center justify-between">
+          <h4 className="text-base font-bold tracking-tight text-gray-900">
+            {pkg.name}
+          </h4>
+          {pkg.level && (
+            <span
+              className={`inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-semibold ${
+                premium ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600'
+              }`}
+            >
+              {pkg.level}
+            </span>
+          )}
+        </div>
+
         {pkg.description && (
-          <p className="mt-3 line-clamp-2 text-xs leading-5 text-gray-500">
+          <p className="mt-2 line-clamp-2 text-sm leading-6 text-gray-500">
             {pkg.description}
           </p>
         )}
+      </div>
 
-        {/* Price */}
-        <div className="mt-5 border-t border-gray-100 pt-4">
+      {/* Body */}
+      <div className="mt-auto px-6 pb-6">
+        <div className="mt-5 border-t border-gray-100 pt-5">
           <div className="flex items-baseline gap-1">
-            <span className="text-xl font-bold tracking-tight text-gray-900">
+            <span className="text-2xl font-extrabold tracking-tight text-gray-900">
               {formatCurrency(pkg.price)}
             </span>
-
-            <span className="text-xs text-gray-400">
+            <span className="text-sm font-medium text-gray-400">
               / 30 hari
             </span>
           </div>
         </div>
 
-        {/* Action */}
         <div className="mt-5">
           {owned ? (
             <Button

@@ -397,8 +397,8 @@ export default function AdminModules() {
             </select>
           </div>
 
-          {/* Type + Status + Price */}
-          <div className="grid grid-cols-3 gap-4">
+          {/* Type + Status */}
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="mb-1.5 block text-xs font-medium text-gray-700">Akses</label>
               <select
@@ -420,16 +420,6 @@ export default function AdminModules() {
                 <option value="draft">Draft</option>
                 <option value="published">Published</option>
               </select>
-            </div>
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-gray-700">Harga (Rp)</label>
-              <Input
-                type="number"
-                min={0}
-                value={form.price}
-                onChange={(e) => setForm({ ...form, price: Number(e.target.value) })}
-                placeholder="0"
-              />
             </div>
           </div>
 

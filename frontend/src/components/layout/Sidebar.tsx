@@ -112,9 +112,11 @@ function NavGroup({
         }`}
       >
         <span className="flex-1 text-left">{group.label}</span>
-        <span className={`transition-transform duration-200 ${open ? 'rotate-90' : ''}`}>
-          <Icon name="chevron" size={14} />
-        </span>
+        {isActive && (
+          <span className={`transition-transform duration-200 ${open ? 'rotate-90' : ''}`}>
+            <Icon name="chevron" size={14} />
+          </span>
+        )}
       </button>
       <div
         className={`overflow-hidden transition-all duration-200 ${

@@ -218,3 +218,6 @@ miraigo/
 - Reservation & Transaction UI (backend tables + models exist; no payment gateway wired)
 - Notification bell wired to real `/notifications` data (table exists, endpoint not yet added)
 - Automated PHPUnit/Pest test suite
+
+
+-untuk kandidat mendunia itu bakalan ada voucher untuk bisa aksesnya per batch itu untuk membuka akses soal paket nya

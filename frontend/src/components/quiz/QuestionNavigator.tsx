@@ -22,8 +22,15 @@ export function QuestionNavigator({ total, currentIndex, answeredIndexes, onNavi
             <button
               key={i}
               onClick={() => onNavigate(i)}
-              className={`flex h-9 w-9 items-center justify-center rounded-lg text-sm font-medium transition-colors ${style}`}
+              className={`relative flex h-9 w-9 items-center justify-center rounded-lg text-sm font-medium transition-colors ${style}`}
             >
+              {isCurrent && (
+                <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2">
+                  <svg width="8" height="6" viewBox="0 0 8 6" fill="currentColor">
+                    <path d="M4 0L0 6h8L4 0z" />
+                  </svg>
+                </span>
+              )}
               {i + 1}
             </button>
           );

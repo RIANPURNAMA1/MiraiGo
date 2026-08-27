@@ -7,7 +7,7 @@ import { LoadingState } from '@/components/ui/LoadingState';
 import { Alert } from '@/components/ui/Alert';
 import { useServerTimer } from '@/hooks/useServerTimer';
 import { fetchAttempt, saveAnswer, submitAttempt } from '@/services/attempts';
-import { getErrorMessage } from '@/services/api';
+import { getErrorMessage, ROOT_URL } from '@/services/api';
 import type { Question, QuizAttempt } from '@/types';
 
 export default function Quiz() {
@@ -183,27 +183,24 @@ export default function Quiz() {
 
       <div className="flex flex-1 overflow-hidden">
         {/* ── Left Sidebar Navigator ── */}
-        <aside className="w-[130px] shrink-0 overflow-y-auto bg-white py-4 shadow-[1px_0_5px_rgba(0,0,0,0.1)] z-10 flex flex-col gap-4">
+        <aside className="w-[130px] shrink-0 overflow-y-auto bg-white py-4 shadow-[2px_0_5px_rgba(0,0,0,0.05)] z-10 flex flex-col gap-6">
           {sections.map((section) => {
             const localOffset = section.startIndex;
-            const shortName = section.name.substring(0, 2) + "...";
-            
+            const shortName = section.name.substring(0, 2) + '...';
+
             return (
-              <div key={section.name} className="flex w-full pl-2">
-                <div className="w-10 shrink-0 flex flex-col items-center pt-1">
-                  <p className="text-[11px] font-semibold text-gray-400">
+              <div key={section.name} className="flex w-full px-2">
+                {/* Kolom Kiri: Label dan Garis Abu-abu (tanpa bar hijau) */}
+                <div className="w-10 shrink-0 flex flex-col items-center">
+                  <p className="text-[12px] font-medium text-gray-500 mb-1">
                     {shortName}
                   </p>
-                  <div className="mt-1 h-16 w-1.5 rounded-full bg-gray-200 overflow-hidden relative">
-                    <div
-                      className="absolute bottom-0 left-0 w-full rounded-full bg-[#5e8b5d] transition-all duration-300"
-                      style={{ height: `${section.total > 0 ? (section.answered / section.total) * 100 : 0}%` }}
-                    />
-                  </div>
-                  <p className="mt-0.5 text-[9px] text-gray-400">{section.answered}/{section.total}</p>
+                  {/* Garis tebal vertikal */}
+                  <div className="w-2.5 flex-1 rounded-full bg-[#e2e4e8]" />
                 </div>
-                
-                <div className="flex-1 border-l-[4px] border-[#d1d5db] flex flex-col gap-1.5 py-1">
+
+                {/* Kolom Kanan: Tombol-tombol berbentuk panah */}
+                <div className="flex-1 flex flex-col gap-2 py-1 pl-1">
                   {questions
                     .map((q, idx) => ({ q, idx }))
                     .filter(({ q }) => q.section_name === section.name)
@@ -213,31 +210,41 @@ export default function Quiz() {
                       const isFlagged = flagged.has(idx);
                       const localNum = idx - localOffset + 1;
 
-                      let bgClass = 'bg-[#5e8b5d]';
-                      if (isAnswered && !isActive) bgClass = 'bg-[#474747]';
-
-                      const triangleColor = isAnswered ? '#474747' : '#5e8b5d';
+                      // Warna background: hijau standar, gelap jika sudah dijawab dan tidak aktif
+                      let bgColor = '#5e8b5d';
+                      if (isAnswered && !isActive) bgColor = '#474747';
 
                       return (
-                        <button
-                          key={q.id}
-                          onClick={() => setCurrentIndex(idx)}
-                          className={`relative flex h-7 w-14 items-center justify-center text-[13px] font-bold text-white transition-all ${
-                            isActive ? 'rounded-none' : 'rounded-r-md rounded-l-none'
-                          } ${bgClass}`}
-                        >
-                          {localNum}
+                        <div key={q.id} className="flex items-center">
+                          <button
+                            onClick={() => setCurrentIndex(idx)}
+                            className="relative flex h-[28px] w-[56px] items-center justify-center rounded text-[13px] font-bold text-white transition-all hover:opacity-90"
+                            style={{ backgroundColor: bgColor }}
+                          >
+                            <span className="w-full text-center">{localNum}</span>
 
+                            {/* Ikon Flag/Bendera */}
+                            {isFlagged && (
+                              <svg
+                                className="absolute top-1 right-[14px] h-[10px] w-[10px] fill-[#fde047] drop-shadow-sm"
+                                viewBox="0 0 24 24"
+                              >
+                                <path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z" />
+                              </svg>
+                            )}
+                          </button>
+
+                          {/* Segitiga indikator active */}
                           {isActive && (
-                            <div className={`absolute top-0 -right-[9px] w-0 h-0 border-y-[14px] border-y-transparent border-l-[10px]`} style={{ borderLeftColor: triangleColor }} />
-                          )}
-
-                          {isFlagged && (
-                            <svg className="absolute -top-1.5 -right-1.5 h-3 w-3 fill-[#fde047] drop-shadow-sm" viewBox="0 0 24 24">
-                              <path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z" />
+                            <svg
+                              className="h-[14px] w-[10px] shrink-0"
+                              viewBox="0 0 10 14"
+                              fill={bgColor}
+                            >
+                              <path d="M0 0L10 7L0 14z" />
                             </svg>
                           )}
-                        </button>
+                        </div>
                       );
                     })}
                 </div>
@@ -248,7 +255,7 @@ export default function Quiz() {
 
         {/* ── Main Question Content ── */}
         <div className="flex-1 overflow-y-auto bg-[#edf1f5] p-6">
-          <div className="mx-auto w-full max-w-5xl bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">        
+          <div className="mx-auto w-full   bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             <div className="p-6">
               {saveError && (
                 <div className="mb-4">
@@ -261,7 +268,7 @@ export default function Quiz() {
                 {currentQuestion.image ? (
                   <div className="w-full rounded bg-[#e2f2fa] flex justify-center relative overflow-hidden">
                     <img
-                      src={currentQuestion.image}
+                      src={currentQuestion.image?.startsWith('http') ? currentQuestion.image : `${ROOT_URL}/storage/${currentQuestion.image}`}
                       alt="Question Context"
                       className="max-h-[400px] object-contain w-full mix-blend-multiply"
                     />
@@ -273,11 +280,11 @@ export default function Quiz() {
                     </p>
                   </div>
                 )}
-                
+
                 {currentQuestion.audio && (
                   <audio controls src={currentQuestion.audio} className="mt-4 w-full" />
                 )}
-                
+
                 {currentQuestion.image && currentQuestion.question_text && (
                   <p className="text-lg font-medium text-gray-900 mt-6 self-start w-full">
                     {currentQuestion.question_text}
@@ -302,16 +309,14 @@ export default function Quiz() {
                     >
                       <span
                         className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
-                          isSelected 
-                            ? 'bg-[#5e8b5d] text-white' 
+                          isSelected
+                            ? 'bg-[#5e8b5d] text-white'
                             : 'bg-[#eef2f7] text-gray-600'
                         }`}
                       >
                         {opt.option}
                       </span>
-                      <span className="text-base text-gray-800">
-                        {opt.option_text}
-                      </span>
+                      <span className="text-base text-gray-800">{opt.option_text}</span>
                     </button>
                   );
                 })}
@@ -324,21 +329,21 @@ export default function Quiz() {
       {/* ── Footer ── */}
       <div className="flex items-center justify-between bg-[#1f2022] px-6 py-2.5">
         <div className="flex items-center gap-3">
-           {/* Fake Visual Toggles */}
-           <div className="flex items-center gap-2">
-             <div className="flex h-6 w-12 items-center rounded-full bg-[#36c073] p-1">
-                <div className="h-4 w-4 rounded-full bg-white flex items-center justify-center">
-                  <span className="text-[10px] font-bold text-[#36c073]">A</span>
-                </div>
-             </div>
-             <div className="flex h-6 w-12 items-center rounded-full bg-[#4682ea] p-1">
-                <div className="h-4 w-4 rounded-full bg-white flex items-center justify-center">
-                  <svg className="w-3 h-3 text-[#4682ea]" fill="currentColor" viewBox="0 0 24 24">
-                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
-                  </svg>
-                </div>
-             </div>
-           </div>
+          {/* Fake Visual Toggles */}
+          <div className="flex items-center gap-2">
+            <div className="flex h-6 w-12 items-center rounded-full bg-[#36c073] p-1">
+              <div className="h-4 w-4 rounded-full bg-white flex items-center justify-center">
+                <span className="text-[10px] font-bold text-[#36c073]">A</span>
+              </div>
+            </div>
+            <div className="flex h-6 w-12 items-center rounded-full bg-[#4682ea] p-1">
+              <div className="h-4 w-4 rounded-full bg-white flex items-center justify-center">
+                <svg className="w-3 h-3 text-[#4682ea]" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
+                </svg>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="flex items-center gap-3">
@@ -346,14 +351,14 @@ export default function Quiz() {
             onClick={() => toggleFlag(currentIndex)}
             className="flex h-9 w-10 items-center justify-center rounded bg-[#405640] transition-colors hover:bg-[#4d664d]"
           >
-             <svg 
-               className={`h-4 w-4 ${flagged.has(currentIndex) ? 'fill-[#f0c885]' : 'fill-white'}`} 
-               viewBox="0 0 24 24"
-             >
-               <path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z" />
-             </svg>
+            <svg
+              className={`h-4 w-4 ${flagged.has(currentIndex) ? 'fill-[#f0c885]' : 'fill-white'}`}
+              viewBox="0 0 24 24"
+            >
+              <path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z" />
+            </svg>
           </button>
-          
+
           <button
             onClick={() => setCurrentIndex((i) => Math.max(0, i - 1))}
             disabled={currentIndex === 0}
@@ -387,7 +392,7 @@ export default function Quiz() {
             Confirm Finish Section
           </p>
 
-          <p className="mb-4 text-xs text-gray-400">sswgoukaku.com</p>
+          <p className="mb-4 text-xs text-gray-400">MiraiGo.com</p>
 
           <p className="mb-4 text-sm leading-relaxed text-gray-700">
             If you select <strong>Finish Section</strong>, you will not be able to return to the

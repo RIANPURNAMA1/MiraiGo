@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
+import { DraggableCalculator } from '@/components/ui/DraggableCalculator';
 import { LoadingState } from '@/components/ui/LoadingState';
 import { Alert } from '@/components/ui/Alert';
 import { useServerTimer } from '@/hooks/useServerTimer';
@@ -22,6 +23,7 @@ export default function Quiz() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [flagged, setFlagged] = useState<Set<number>>(new Set());
+  const [showCalc, setShowCalc] = useState(false);
 
   const load = useCallback(() => {
     if (!attemptId) return;
@@ -169,54 +171,71 @@ export default function Quiz() {
           <span className="font-normal">{testTitle}</span>
         </p>
         {/* Calculator Icon */}
-        <svg className="h-4 w-4 text-white opacity-90" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-7-2h2v-2h-2v2zm0-4h2v-2h-2v2zm0-4h2V7h-2v2zm-4 8h2v-2H8v2zm0-4h2v-2H8v2zm0-4h2V7H8v2zm8 8h2v-2h-2v2zm0-4h2v-2h-2v2zm0-4h2V7h-2v2z" />
-        </svg>
+        <button
+          onClick={() => setShowCalc((v) => !v)}
+          className="text-white opacity-90 hover:opacity-100 transition-opacity cursor-pointer"
+        >
+          <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-7-2h2v-2h-2v2zm0-4h2v-2h-2v2zm0-4h2V7h-2v2zm-4 8h2v-2H8v2zm0-4h2v-2H8v2zm0-4h2V7H8v2zm8 8h2v-2h-2v2zm0-4h2v-2h-2v2zm0-4h2V7h-2v2z" />
+          </svg>
+        </button>
       </div>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* ── Left Sidebar Navigator (DIUBAH TOTAL AGAR MIRIP) ── */}
-        <aside className="w-[100px] shrink-0 overflow-y-auto bg-white py-4 shadow-[1px_0_5px_rgba(0,0,0,0.1)] z-10 flex flex-col gap-4">
+        {/* ── Left Sidebar Navigator ── */}
+        <aside className="w-[130px] shrink-0 overflow-y-auto bg-white py-4 shadow-[1px_0_5px_rgba(0,0,0,0.1)] z-10 flex flex-col gap-4">
           {sections.map((section) => {
             const localOffset = section.startIndex;
-            // Menghasilkan singkatan seperti "Sc...", "Co...", "Lis..."
             const shortName = section.name.substring(0, 2) + "...";
             
             return (
               <div key={section.name} className="flex w-full pl-2">
-                {/* Kolom Kiri: Label Kategori */}
-                <div className="w-8 shrink-0 text-left pt-1">
+                <div className="w-10 shrink-0 flex flex-col items-center pt-1">
                   <p className="text-[11px] font-semibold text-gray-400">
                     {shortName}
                   </p>
+                  <div className="mt-1 h-16 w-1.5 rounded-full bg-gray-200 overflow-hidden relative">
+                    <div
+                      className="absolute bottom-0 left-0 w-full rounded-full bg-[#5e8b5d] transition-all duration-300"
+                      style={{ height: `${section.total > 0 ? (section.answered / section.total) * 100 : 0}%` }}
+                    />
+                  </div>
+                  <p className="mt-0.5 text-[9px] text-gray-400">{section.answered}/{section.total}</p>
                 </div>
                 
-                {/* Kolom Kanan: Garis Vertikal (Track) dan Tombol */}
                 <div className="flex-1 border-l-[4px] border-[#d1d5db] flex flex-col gap-1.5 py-1">
                   {questions
                     .map((q, idx) => ({ q, idx }))
                     .filter(({ q }) => q.section_name === section.name)
                     .map(({ q, idx }) => {
                       const isActive = idx === currentIndex;
+                      const isAnswered = !!q.selected_option_id;
+                      const isFlagged = flagged.has(idx);
                       const localNum = idx - localOffset + 1;
-                      
-                      // Pada screenshot semua tombol berwarna hijau
-                      const bgClass = 'bg-[#5e8b5d]';
+
+                      let bgClass = 'bg-[#5e8b5d]';
+                      if (isAnswered && !isActive) bgClass = 'bg-[#474747]';
+
+                      const triangleColor = isAnswered ? '#474747' : '#5e8b5d';
 
                       return (
                         <button
                           key={q.id}
                           onClick={() => setCurrentIndex(idx)}
-                          // h-7 = 28px height. Tombol menempel pada garis kiri (rounded-l-none).
-                          className={`relative flex h-7 w-12 items-center justify-center text-[13px] font-bold text-white transition-all ${
+                          className={`relative flex h-7 w-14 items-center justify-center text-[13px] font-bold text-white transition-all ${
                             isActive ? 'rounded-none' : 'rounded-r-md rounded-l-none'
                           } ${bgClass}`}
                         >
                           {localNum}
-                          
-                          {/* Segitiga panah CSS untuk item yang aktif */}
+
                           {isActive && (
-                            <div className="absolute top-0 -right-[9px] w-0 h-0 border-y-[14px] border-y-transparent border-l-[10px] border-l-[#5e8b5d]" />
+                            <div className={`absolute top-0 -right-[9px] w-0 h-0 border-y-[14px] border-y-transparent border-l-[10px]`} style={{ borderLeftColor: triangleColor }} />
+                          )}
+
+                          {isFlagged && (
+                            <svg className="absolute -top-1.5 -right-1.5 h-3 w-3 fill-[#fde047] drop-shadow-sm" viewBox="0 0 24 24">
+                              <path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z" />
+                            </svg>
                           )}
                         </button>
                       );
@@ -229,10 +248,7 @@ export default function Quiz() {
 
         {/* ── Main Question Content ── */}
         <div className="flex-1 overflow-y-auto bg-[#edf1f5] p-6">
-          <div className="mx-auto w-full max-w-5xl bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            {/* Light Blue Top Bar inside the card */}
-            <div className="h-4 bg-[#e2eaf4] w-[96%] mx-auto mt-4 rounded-full" />
-
+          <div className="mx-auto w-full max-w-5xl bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">        
             <div className="p-6">
               {saveError && (
                 <div className="mb-4">
@@ -243,7 +259,7 @@ export default function Quiz() {
               {/* Question Layout */}
               <div className="mb-6 flex flex-col items-center">
                 {currentQuestion.image ? (
-                  <div className="w-full rounded bg-[#f3f4f6] flex justify-center relative overflow-hidden">
+                  <div className="w-full rounded bg-[#e2f2fa] flex justify-center relative overflow-hidden">
                     <img
                       src={currentQuestion.image}
                       alt="Question Context"
@@ -251,7 +267,7 @@ export default function Quiz() {
                     />
                   </div>
                 ) : (
-                  <div className="w-full rounded bg-[#f3f4f6] p-6 min-h-[150px]">
+                  <div className="w-full rounded bg-[#e2f2fa] p-6 min-h-[150px]">
                     <p className="text-lg font-medium text-gray-900">
                       {currentQuestion.question_text}
                     </p>
@@ -399,6 +415,8 @@ export default function Quiz() {
           </div>
         </div>
       </Modal>
+
+      <DraggableCalculator isOpen={showCalc} onClose={() => setShowCalc(false)} />
     </div>
   );
 }

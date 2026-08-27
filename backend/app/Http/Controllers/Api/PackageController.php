@@ -19,8 +19,7 @@ class PackageController extends Controller
 
         $query = Package::query()
             ->where('status', 'published')
-            ->withCount(['sections'])
-            ->with('sections');
+            ->with(['sections.questions']);
 
         if ($search = request('search')) {
             $query->where('name', 'like', "%{$search}%");
@@ -57,7 +56,7 @@ class PackageController extends Controller
         }
 
         $user = Auth::user();
-        $package->load('sections');
+        $package->load('sections.questions');
         $this->attachUserContext($package, $user);
 
         return $this->success(new PackageResource($package));
@@ -86,8 +85,10 @@ class PackageController extends Controller
             ->latest('id')
             ->first();
 
-        $package->progress_percent = $inProgress && $package->total_questions()
-            ? round(($inProgress->answers()->count() / max(1, $package->total_questions())) * 100)
+        $totalQ = $package->totalQuestions();
+
+        $package->progress_percent = $inProgress && $totalQ
+            ? round(($inProgress->answers()->count() / max(1, $totalQ)) * 100)
             : 0;
     }
 }

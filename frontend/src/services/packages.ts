@@ -6,6 +6,7 @@ export interface PackageFilters {
   category?: string;
   level?: string;
   page?: number;
+  per_page?: number;
 }
 
 export async function fetchPackages(filters: PackageFilters = {}) {

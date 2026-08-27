@@ -15,7 +15,7 @@ class PackageSectionResource extends JsonResource
             'description' => $this->description,
             'order' => $this->order,
             'duration_minutes' => $this->duration_minutes,
-            'question_count' => $this->whenCounted('questions') ?? $this->questions()->count(),
+            'question_count' => $this->questions->count(),
             'progress' => $this->when(isset($this->progress_percent), fn () => $this->progress_percent),
         ];
     }

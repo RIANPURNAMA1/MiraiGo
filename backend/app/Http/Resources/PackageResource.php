@@ -23,7 +23,7 @@ class PackageResource extends JsonResource
             'thumbnail' => $this->thumbnail,
             'total_questions' => $this->when(
                 $this->relationLoaded('sections'),
-                fn () => $this->sections->sum(fn ($s) => $s->questions_count ?? $s->questions()->count())
+                fn () => $this->sections->sum(fn ($s) => $s->questions->count())
             ),
             // access_state / progress are injected by the controller since they
             // depend on the authenticated user, not the package itself.

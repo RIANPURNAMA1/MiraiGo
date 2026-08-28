@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '@/services/api';
-import type { KotobaCategory, KotobaTopic } from '@/types';
+import { fetchAdminKotoba, syncKotobaTopicWords } from '@/services/admin';
+import type { KotobaCategory, KotobaItem, KotobaTopic } from '@/types';
 import { LoadingState } from '@/components/ui/LoadingState';
 import { EmptyState } from '@/components/ui/EmptyState';
 
@@ -14,6 +15,11 @@ export default function AdminKotobaTopics() {
   const [form, setForm] = useState({ category_id: 0, name: '', description: '', order: 0, is_active: true });
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
+
+  const [manageTopic, setManageTopic] = useState<KotobaTopic | null>(null);
+  const [allWords, setAllWords] = useState<KotobaItem[]>([]);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [manageLoading, setManageLoading] = useState(false);
 
   async function load() {
     try {
@@ -58,6 +64,40 @@ export default function AdminKotobaTopics() {
     if (!confirm('Yakin ingin menghapus topik ini?')) return;
     await api.delete(`/admin/kotoba-topics/${id}`);
     load();
+  }
+
+  async function openManage(topic: KotobaTopic) {
+    setManageTopic(topic);
+    setManageLoading(true);
+    try {
+      const res = await fetchAdminKotoba({ category_id: topic.category_id, per_page: 100 });
+      setAllWords(res.items);
+      setSelectedIds((topic.kotoba ?? []).map((w) => w.id));
+    } catch { /* empty */ } finally { setManageLoading(false); }
+  }
+
+  function toggleWord(id: number) {
+    setSelectedIds((ids) =>
+      ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]
+    );
+  }
+
+  function selectAll() {
+    setSelectedIds(allWords.map((w) => w.id));
+  }
+
+  function selectNone() {
+    setSelectedIds([]);
+  }
+
+  async function handleSaveWords() {
+    if (!manageTopic) return;
+    setSaving(true);
+    try {
+      await syncKotobaTopicWords(manageTopic.id, selectedIds);
+      setManageTopic(null);
+      load();
+    } catch { /* empty */ } finally { setSaving(false); }
   }
 
   const filtered = topics.filter(t => !search || t.name.toLowerCase().includes(search.toLowerCase()));
@@ -112,6 +152,7 @@ export default function AdminKotobaTopics() {
                     <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${t.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{t.is_active ? 'Aktif' : 'Nonaktif'}</span>
                   </td>
                   <td className="px-5 py-4 text-right">
+                    <button onClick={() => openManage(t)} className="mr-2 text-xs font-medium text-emerald-600 hover:underline">Kelola Kata</button>
                     <button onClick={() => openEdit(t)} className="mr-2 text-xs font-medium text-blue-600 hover:underline">Edit</button>
                     <button onClick={() => handleDelete(t.id)} className="text-xs font-medium text-red-600 hover:underline">Hapus</button>
                   </td>
@@ -158,6 +199,66 @@ export default function AdminKotobaTopics() {
             <div className="mt-6 flex justify-end gap-2">
               <button onClick={() => setModalOpen(false)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Batal</button>
               <button onClick={handleSave} disabled={saving || !form.name || !form.category_id} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50">{saving ? 'Menyimpan...' : 'Simpan'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {manageTopic && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="flex max-h-[85vh] w-full max-w-2xl flex-col rounded-2xl bg-white p-6 shadow-xl">
+            <h2 className="mb-1 text-lg font-bold text-gray-900">Kelola Kata — {manageTopic.name}</h2>
+            <p className="mb-4 text-sm text-gray-500">
+              Centang kosakata yang akan muncul sebagai soal pada topik ini.
+            </p>
+
+            <div className="mb-3 flex flex-wrap items-center gap-2 text-xs">
+              <span className="font-medium text-gray-600">Terpilih: {selectedIds.length} kata</span>
+              <button onClick={selectAll} className="rounded border border-gray-300 px-2.5 py-1 font-medium text-gray-600 hover:bg-gray-50">Pilih Semua</button>
+              <button onClick={selectNone} className="rounded border border-gray-300 px-2.5 py-1 font-medium text-gray-600 hover:bg-gray-50">Bersihkan</button>
+            </div>
+
+            <div className="min-h-[200px] flex-1 overflow-y-auto rounded-lg border border-gray-200">
+              {manageLoading ? (
+                <LoadingState label="Memuat kata..." />
+              ) : allWords.length === 0 ? (
+                <EmptyState title="Belum ada kata" description="Buat soal di menu 'Soal Kotoba' untuk kategori ini terlebih dahulu." />
+              ) : (
+                <table className="w-full text-left text-sm">
+                  <thead className="border-b border-gray-200 bg-gray-50 text-xs font-semibold uppercase text-gray-500">
+                    <tr>
+                      <th className="px-4 py-2.5 w-10"></th>
+                      <th className="px-4 py-2.5">Jepang</th>
+                      <th className="px-4 py-2.5">Reading</th>
+                      <th className="px-4 py-2.5">Arti</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {allWords.map((w) => (
+                      <tr key={w.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50">
+                        <td className="px-4 py-2">
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.includes(w.id)}
+                            onChange={() => toggleWord(w.id)}
+                            className="h-4 w-4 rounded border-gray-300"
+                          />
+                        </td>
+                        <td className="px-4 py-2 font-medium text-gray-900">{w.japanese}</td>
+                        <td className="px-4 py-2 text-gray-500">{w.reading ?? '-'}</td>
+                        <td className="px-4 py-2 text-gray-700">{w.meaning}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button onClick={() => setManageTopic(null)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Batal</button>
+              <button onClick={handleSaveWords} disabled={saving} className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50">
+                {saving ? 'Menyimpan...' : 'Simpan'}
+              </button>
             </div>
           </div>
         </div>

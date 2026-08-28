@@ -325,7 +325,7 @@ export default function Payment() {
                   {pkg.thumbnail ? (
                     <img src={pkg.thumbnail} alt={pkg.name} className="h-16 w-16 rounded-lg object-cover" />
                   ) : (
-                    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-brand-500 to-brand-700">
+                    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#025dd2] to-[#15a0f5]">
                       <span className="text-lg font-bold text-white/30">JFT</span>
                     </div>
                   )}

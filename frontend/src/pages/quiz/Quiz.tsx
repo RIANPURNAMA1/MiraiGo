@@ -179,18 +179,29 @@ export default function Quiz() {
   return (
     <div className="flex h-screen flex-col font-sans bg-[#edf1f5]">
       {/* ── Top Header (Dark) ── */}
-      <div className="relative flex items-center justify-between bg-[#1f2022] px-6 py-2">
-        <div className="flex flex-col leading-tight">
-          <p className="text-[13px] text-white">
-            <span className="text-gray-300 font-normal">Question: </span>
-            <span className="font-bold">{sectionLocalIndex + 1}</span>
-          </p>
-          <p className="text-[13px] text-gray-300 font-normal mt-1">Section:</p>
-          <p className="text-[13px] text-white font-semibold">{currentSectionName}</p>
+      <div className="relative bg-[#1f2022] px-4 py-2 md:px-6">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-col leading-tight">
+            <p className="text-[13px] text-white">
+              <span className="text-gray-300 font-normal">Question: </span>
+              <span className="font-bold">{sectionLocalIndex + 1}</span>
+            </p>
+            <p className="text-[13px] text-gray-300 font-normal mt-1">Section:</p>
+            <p className="max-w-[160px] truncate text-[13px] text-white font-semibold">
+              {currentSectionName}
+            </p>
+          </div>
+
+          <button
+            onClick={handleFinishSection}
+            className="shrink-0 rounded bg-[#f0c885] px-3 py-1.5 text-xs font-bold text-gray-900 transition-colors hover:bg-[#e0b875] sm:px-4 sm:text-sm"
+          >
+            Finish Section
+          </button>
         </div>
 
         {/* Timer */}
-        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
+        <div className="mt-2 flex items-center justify-center gap-2 sm:absolute sm:left-1/2 sm:top-1/2 sm:mt-0 sm:-translate-x-1/2 sm:-translate-y-1/2">
           <svg
             className="h-6 w-6 text-white"
             viewBox="0 0 24 24"
@@ -203,30 +214,23 @@ export default function Quiz() {
             <circle cx="12" cy="12" r="10" />
             <polyline points="12 6 12 12 16 14" />
           </svg>
-          <div className="flex flex-col">
+          <div className="flex items-baseline gap-2 sm:flex-col sm:gap-0">
             <p className="text-[11px] text-white tracking-wide">Time Remaining</p>
             <p className="text-lg font-bold text-white leading-tight">{timeLabel}</p>
           </div>
         </div>
-
-        <button
-          onClick={handleFinishSection}
-          className="rounded bg-[#f0c885] px-4 py-1.5 text-sm font-bold text-gray-900 transition-colors hover:bg-[#e0b875]"
-        >
-          Finish Section
-        </button>
       </div>
 
       {/* ── Subheader (Green) ── */}
-      <div className="flex items-center justify-between bg-[#5e8b5d] px-6 py-1.5 border-b border-[#4d7a4c]">
-        <p className="text-[13px] text-white">
+      <div className="flex items-center justify-between bg-[#5e8b5d] px-4 py-1.5 border-b border-[#4d7a4c] md:px-6">
+        <p className="min-w-0 truncate text-[13px] text-white">
           <span className="font-bold">Test: </span>
           <span className="font-normal">{testTitle}</span>
         </p>
         {/* Calculator Icon */}
         <button
           onClick={() => setShowCalc((v) => !v)}
-          className="text-white opacity-90 hover:opacity-100 transition-opacity cursor-pointer"
+          className="shrink-0 text-white opacity-90 hover:opacity-100 transition-opacity cursor-pointer"
         >
           <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
             <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-7-2h2v-2h-2v2zm0-4h2v-2h-2v2zm0-4h2V7h-2v2zm-4 8h2v-2H8v2zm0-4h2v-2H8v2zm0-4h2V7H8v2zm8 8h2v-2h-2v2zm0-4h2v-2h-2v2zm0-4h2V7h-2v2z" />
@@ -234,9 +238,42 @@ export default function Quiz() {
         </button>
       </div>
 
+      {/* ── Mobile: question navigator ── */}
+      <div className="flex items-center gap-2 overflow-x-auto border-b border-gray-200 bg-white px-3 py-2 md:hidden">
+        <span className="shrink-0 text-[10px] font-semibold text-gray-400">Soal:</span>
+        {questions.map((q, idx) => {
+          const isSectionStart = idx === 0 || q.section_name !== questions[idx - 1].section_name;
+          const isActive = idx === currentIndex;
+          const isAnswered = !!q.selected_option_id;
+          const isFlagged = flagged.has(idx);
+          return (
+            <div key={q.id} className="flex shrink-0 items-center gap-1.5">
+              {isSectionStart && idx > 0 && (
+                <span className="mx-1 h-5 w-px bg-gray-300" />
+              )}
+              <button
+                onClick={() => setCurrentIndex(idx)}
+                className={`relative flex h-9 min-w-9 shrink-0 items-center justify-center rounded-md px-1 text-xs font-bold transition-all hover:opacity-90 ${
+                  isActive
+                    ? 'bg-[#5e8b5d] text-white'
+                    : isAnswered
+                      ? 'bg-[#474747] text-white'
+                      : 'border border-gray-200 bg-[#eef2f7] text-gray-700'
+                }`}
+              >
+                {idx + 1}
+                {isFlagged && (
+                  <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-yellow-400" />
+                )}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+
       <div className="flex flex-1 overflow-hidden">
-        {/* ── Left Sidebar Navigator ── */}
-        <aside className="w-[130px] shrink-0 overflow-y-auto z-10 relative">
+        {/* ── Left Sidebar Navigator (desktop only) ── */}
+        <aside className="hidden md:block md:w-[130px] md:shrink-0 md:overflow-y-auto md:relative md:z-10">
           <div className="flex">
             {/* Background putih full height */}
             <div className="absolute inset-y-0 left-0 w-10 bg-white" />
@@ -320,9 +357,9 @@ export default function Quiz() {
         </aside>
 
         {/* ── Main Question Content ── */}
-        <div className="flex-1 overflow-y-auto bg-[#edf1f5] p-6">
+        <div className="flex-1 overflow-y-auto bg-[#edf1f5] p-3 md:p-6">
           <div className="mx-auto w-full   bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <div className="p-6">
+            <div className="p-4 md:p-6">
               {saveError && (
                 <div className="mb-4">
                   <Alert variant="error">{saveError}</Alert>
@@ -330,7 +367,7 @@ export default function Quiz() {
               )}
 
               {/* Question Layout */}
-              <div className="mb-6 flex flex-col items-center">
+              <div className="mb-5 flex flex-col items-center md:mb-6">
                 {currentQuestion.image ? (
                   <div className="w-full rounded bg-[#e2f2fa] flex justify-center relative overflow-hidden">
                     <img
@@ -340,8 +377,8 @@ export default function Quiz() {
                     />
                   </div>
                 ) : (
-                  <div className="w-full rounded bg-[#e2f2fa] p-6 min-h-[150px]">
-                    <p className="text-lg font-medium text-gray-900">
+                  <div className="w-full rounded bg-[#e2f2fa] p-4 min-h-[120px] md:p-6 md:min-h-[150px]">
+                    <p className="text-base font-medium text-gray-900 md:text-lg">
                       {currentQuestion.question_text}
                     </p>
                   </div>
@@ -352,14 +389,14 @@ export default function Quiz() {
                 )}
 
                 {currentQuestion.image && currentQuestion.question_text && (
-                  <p className="text-lg font-medium text-gray-900 mt-6 self-start w-full">
+                  <p className="text-base font-medium text-gray-900 mt-5 self-start w-full md:mt-6 md:text-lg">
                     {currentQuestion.question_text}
                   </p>
                 )}
               </div>
 
               {/* Options - Vertical Stack */}
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-2.5 md:gap-3">
                 {currentQuestion.options.map((opt) => {
                   const isSelected = currentQuestion.selected_option_id === opt.id;
                   return (
@@ -367,7 +404,7 @@ export default function Quiz() {
                       key={opt.id}
                       onClick={() => handleSelectOption(opt.id)}
                       disabled={isExpired}
-                      className={`flex w-full items-center gap-4 rounded border p-3 text-left transition-colors disabled:opacity-50 ${
+                      className={`flex w-full items-center gap-3 rounded border p-3 text-left transition-colors disabled:opacity-50 md:gap-4 ${
                         isSelected
                           ? 'border-[#5e8b5d] bg-[#f2f8f2]'
                           : 'border-gray-300 bg-white hover:bg-gray-50'
@@ -382,7 +419,7 @@ export default function Quiz() {
                       >
                         {opt.option}
                       </span>
-                      <span className="text-base text-gray-800">{opt.option_text}</span>
+                      <span className="text-sm text-gray-800 md:text-base">{opt.option_text}</span>
                     </button>
                   );
                 })}
@@ -393,10 +430,10 @@ export default function Quiz() {
       </div>
 
       {/* ── Footer ── */}
-      <div className="flex items-center justify-between bg-[#1f2022] px-6 py-2.5">
+      <div className="flex items-center justify-between gap-2 bg-[#1f2022] px-3 py-2 md:px-6">
         <div className="flex items-center gap-3">
-          {/* Fake Visual Toggles */}
-          <div className="flex items-center gap-2">
+          {/* Fake Visual Toggles (desktop only) */}
+          <div className="hidden items-center gap-2 md:flex">
             <div className="flex h-6 w-12 items-center rounded-full bg-[#36c073] p-1">
               <div className="h-4 w-4 rounded-full bg-white flex items-center justify-center">
                 <span className="text-[10px] font-bold text-[#36c073]">A</span>
@@ -412,23 +449,24 @@ export default function Quiz() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => toggleFlag(currentIndex)}
-            className="flex h-9 w-10 items-center justify-center rounded bg-[#405640] transition-colors hover:bg-[#4d664d]"
+        <button
+          onClick={() => toggleFlag(currentIndex)}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded bg-[#405640] transition-colors hover:bg-[#4d664d] md:h-9 md:w-10"
+          aria-label="Flag"
+        >
+          <svg
+            className={`h-4 w-4 ${flagged.has(currentIndex) ? 'fill-[#f0c885]' : 'fill-white'}`}
+            viewBox="0 0 24 24"
           >
-            <svg
-              className={`h-4 w-4 ${flagged.has(currentIndex) ? 'fill-[#f0c885]' : 'fill-white'}`}
-              viewBox="0 0 24 24"
-            >
-              <path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z" />
-            </svg>
-          </button>
+            <path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z" />
+          </svg>
+        </button>
 
+        <div className="flex flex-1 items-center justify-end gap-2 md:gap-3">
           <button
             onClick={() => setCurrentIndex((i) => Math.max(0, i - 1))}
             disabled={currentIndex === 0}
-            className="rounded bg-[#405640] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#4d664d] disabled:opacity-50"
+            className="rounded bg-[#405640] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#4d664d] disabled:opacity-50 md:px-5"
           >
             &lt; Back
           </button>
@@ -436,7 +474,7 @@ export default function Quiz() {
           {currentIndex < questions.length - 1 ? (
             <button
               onClick={() => setCurrentIndex((i) => Math.min(questions.length - 1, i + 1))}
-              className="rounded bg-[#5e8b5d] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#4d7a4c]"
+              className="rounded bg-[#5e8b5d] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#4d7a4c] md:px-5"
             >
               Next &gt;
             </button>

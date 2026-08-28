@@ -78,7 +78,7 @@ export default function Header() {
               placeholder="Temukan paket ujian"
               className="w-full bg-transparent px-2 text-sm text-gray-900 placeholder-gray-500 focus:outline-none"
             />
-            <button className="rounded-md bg-[#673de6] px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#5b36cc]">
+            <button className="rounded-md bg-brand-600 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-700">
               Cari
             </button>
           </div>

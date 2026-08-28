@@ -7,7 +7,7 @@ export default function Pricing() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* --- Header Section --- */}
         <div className="text-center">
-          <div className="inline-flex items-center rounded-full bg-indigo-100 px-4 py-1.5 text-sm font-semibold text-indigo-800">
+          <div className="inline-flex items-center rounded-full bg-brand-100 px-4 py-1.5 text-sm font-semibold text-brand-800">
             Paket dan Harga
           </div>
           <h2 className="mt-6 text-4xl font-normal tracking-tight text-gray-900 sm:text-5xl">
@@ -83,8 +83,8 @@ export default function Pricing() {
                 <div
                   className={`absolute right-6 top-8 rounded-full px-3 py-1 text-xs font-bold ${
                     p.popular
-                      ? "bg-white/10 text-indigo-300"
-                      : "bg-indigo-50 text-indigo-700"
+                      ? "bg-white/10 text-brand-300"
+                      : "bg-brand-50 text-brand-700"
                   }`}
                 >
                   {p.badge}
@@ -95,7 +95,7 @@ export default function Pricing() {
               <h3 className="text-2xl font-bold flex items-center gap-2">
                 {p.popular && (
                   <svg
-                    className="h-5 w-5 text-indigo-400"
+                    className="h-5 w-5 text-brand-400"
                     viewBox="0 0 24 24"
                     fill="currentColor"
                   >
@@ -133,8 +133,8 @@ export default function Pricing() {
                 to="/latihan-soal"
                 className={`mt-8 block w-full rounded-full py-3.5 text-center text-sm font-bold transition-all ${
                   p.popular
-                    ? "bg-[#673de6] text-white hover:bg-[#5b36cc]"
-                    : "border-2 border-[#673de6] text-[#673de6] hover:bg-indigo-50"
+                    ? "bg-brand-600 text-white hover:bg-brand-700"
+                    : "border-2 border-brand-600 text-brand-600 hover:bg-brand-50"
                 }`}
               >
                 Pilih paket
@@ -158,7 +158,7 @@ export default function Pricing() {
                   <li key={index} className="flex items-start gap-3 text-sm">
                     <svg
                       className={`mt-0.5 h-5 w-5 shrink-0 ${
-                        p.popular ? "text-indigo-400" : "text-green-500"
+                        p.popular ? "text-brand-400" : "text-green-500"
                       }`}
                       viewBox="0 0 20 20"
                       fill="currentColor"

@@ -11,6 +11,7 @@ import {
   KotobaCategory,
   KotobaItem,
   KotobaInput,
+  KotobaTopic,
   PaginatedResponse,
   PackageSection,
   Question,
@@ -367,7 +368,7 @@ export async function toggleAdminKotobaCategory(id: number) {
 }
 
 // ── Kotoba Words ───────────────────────────────────────────────────
-export async function fetchAdminKotoba(filters?: { category_id?: number; search?: string; page?: number; per_page?: number }) {
+export async function fetchAdminKotoba(filters?: { category_id?: number; topic_id?: number; search?: string; page?: number; per_page?: number }) {
   const res = await api.get<ApiSuccess<PaginatedResponse<KotobaItem>>>('/admin/kotoba', { params: filters });
   return res.data.data;
 }
@@ -389,6 +390,22 @@ export async function deleteAdminKotoba(id: number) {
 
 export async function toggleAdminKotoba(id: number) {
   const res = await api.post<ApiSuccess<KotobaItem>>(`/admin/kotoba/${id}/toggle-active`);
+  return res.data.data;
+}
+
+// ── Kotoba Topics ───────────────────────────────────────────────────
+export async function fetchAdminKotobaTopics(filters?: { category_id?: number; search?: string; page?: number; per_page?: number }) {
+  const res = await api.get<ApiSuccess<PaginatedResponse<KotobaTopic>>>('/admin/kotoba-topics', { params: filters });
+  return res.data.data;
+}
+
+export async function syncKotobaTopicWords(topicId: number, kotobaIds: number[]) {
+  const res = await api.post<ApiSuccess<KotobaTopic>>(`/admin/kotoba-topics/${topicId}/sync-words`, { kotoba_ids: kotobaIds });
+  return res.data.data;
+}
+
+export async function createAdminKotobaTopic(input: Partial<KotobaTopic>) {
+  const res = await api.post<ApiSuccess<KotobaTopic>>('/admin/kotoba-topics', input);
   return res.data.data;
 }
 

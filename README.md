@@ -7,7 +7,6 @@ responsive terinspirasi Hostinger-style dashboard (tanpa meniru identik).
 Status implementasi: **P0 (Core Learning System) — lengkap dan siap dijalankan.**
 P1 (modules, announcement, profile) — lengkap.
 P2 (admin panel API, reservation, transaction) — fondasi backend sudah ada; UI admin belum dibangun.
-
 ---
 
 ## 1. Overview

@@ -15,9 +15,9 @@ import {
   CheckCircle2,
   Clock3,
   CreditCard,
-  Crown,
   ArrowRight,
   ShieldCheck,
+  Lock,
 } from 'lucide-react';
 
 function formatCurrency(amount: number) {
@@ -185,7 +185,7 @@ export default function Subscription() {
           <div className="flex h-full flex-col justify-between">
             <div>
               <div className="flex h-10 w-10 items-center justify-center rounded-md bg-yellow-500 text-black">
-                <Crown size={19} />
+                <Lock size={19} />
               </div>
 
               <h3 className="mt-4 text-lg font-semibold">
@@ -197,15 +197,13 @@ export default function Subscription() {
               </p>
             </div>
 
-            <button
+            <Button
               onClick={() => premiumRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-              className="mt-6"
+              className="mt-6 w-full bg-yellow-500 text-black hover:bg-yellow-600"
             >
-              <Button className="w-full bg-yellow-500 text-black hover:bg-yellow-600">
-                Lihat Paket
-                <ArrowRight size={15} />
-              </Button>
-            </button>
+              Lihat Paket
+              <ArrowRight size={15} />
+            </Button>
           </div>
         </div>
       </div>
@@ -305,56 +303,57 @@ export default function Subscription() {
           PREMIUM PACKAGES
       ====================================================== */}
 
-      <section id="premium-packages" ref={premiumRef}>
-        <div className="mb-5">
-          <div className="flex items-center gap-2">
-            <Crown size={18} className="text-amber-500" />
-            <h3 className="text-base font-bold tracking-tight text-gray-900">
-              Upgrade Aksess 
-            </h3>
-          </div>
+    <section id="premium-packages" ref={premiumRef}>
+  {/* Header */}
+  <div className="mb-6">
+    <div className="flex items-center gap-2">
+      <Lock size={17} className="text-amber-500" />
+      <h3 className="text-base font-semibold text-gray-900">
+        Upgrade Akses
+      </h3>
+    </div>
 
-          <p className="mt-1 text-sm text-gray-500">
-            Pilih paket yang sesuai dengan kebutuhan belajar Anda.
-          </p>
-        </div>
+    <p className="mt-1 text-sm text-gray-500">
+      Pilih paket yang sesuai dengan kebutuhan belajar Anda.
+    </p>
+  </div>
 
-        {premiumPkgs.length === 0 ? (
-          <div className="rounded-md border border-dashed border-gray-200 bg-white px-6 py-12 text-center">
-            <Crown
-              size={24}
-              className="mx-auto mb-3 text-gray-300"
-            />
+  {premiumPkgs.length === 0 ? (
+    <div className="rounded-xl border border-gray-200 bg-white px-6 py-12 text-center">
+      <Lock
+        size={22}
+        className="mx-auto mb-3 text-gray-300"
+      />
 
-            <p className="text-sm font-medium text-gray-700">
-              Belum ada paket premium
-            </p>
+      <p className="text-sm font-medium text-gray-700">
+        Belum ada paket premium
+      </p>
 
-            <p className="mt-1 text-xs text-gray-400">
-              Paket premium belum tersedia saat ini.
-            </p>
-          </div>
-        ) : (
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {premiumPkgs.map((pkg) => {
-              const owned = sub?.accesses.some(
-                (a) =>
-                  a.package === pkg.name &&
-                  a.status === 'active'
-              );
+      <p className="mt-1 text-xs text-gray-400">
+        Paket premium belum tersedia saat ini.
+      </p>
+    </div>
+  ) : (
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
+      {premiumPkgs.map((pkg) => {
+        const owned = sub?.accesses.some(
+          (a) =>
+            a.package === pkg.name &&
+            a.status === 'active'
+        );
 
-              return (
-                <PackageCard
-                  key={pkg.id}
-                  pkg={pkg}
-                  premium
-                  owned={!!owned}
-                />
-              );
-            })}
-          </div>
-        )}
-      </section>
+        return (
+          <PackageCard
+            key={pkg.id}
+            pkg={pkg}
+            premium
+            owned={!!owned}
+          />
+        );
+      })}
+    </div>
+  )}
+</section>
 
       {/* =====================================================
           PAYMENT HISTORY
@@ -394,7 +393,6 @@ export default function Subscription() {
 /* =========================================================
    PACKAGE CARD
 ========================================================= */
-
 function PackageCard({
   pkg,
   premium = false,
@@ -406,95 +404,94 @@ function PackageCard({
 }) {
   return (
     <div
-      className={`group relative flex flex-col overflow-hidden rounded-md border bg-white shadow-sm transition-all duration-300 ${
-        premium
-          ? owned
-            ? 'border-gray-300'
-            : 'border-gray-100 hover:-translate-y-1 hover:border-amber-200 hover:shadow-xl'
-          : owned
-            ? 'border-gray-300'
-            : 'border-gray-200 hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-md'
+      className={`group flex flex-col rounded-xl border bg-white p-4 transition-all duration-200 ${
+        owned
+          ? 'border-gray-200'
+          : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
       }`}
     >
-      {/* Top accent */}
-      {premium && (
-        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber-300 via-amber-400 to-amber-300" />
-      )}
-
       {/* Header */}
-      <div className="px-6 pb-2 pt-7">
-        <div className="flex items-center gap-2.5">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-2">
           <div
-            className={`flex h-10 w-10 items-center justify-center rounded-lg ring-1 ring-inset ${
+            className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
               premium
-                ? 'bg-amber-50 text-amber-500 ring-amber-100'
-                : 'bg-gray-50 text-gray-500 ring-gray-100'
+                ? 'bg-amber-50 text-amber-500'
+                : 'bg-gray-50 text-gray-500'
             }`}
           >
-            {premium ? <Crown size={18} /> : <ShieldCheck size={18} />}
+            {premium ? (
+              <Lock size={13} />
+            ) : (
+              <ShieldCheck size={13} />
+            )}
           </div>
-          {premium && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-semibold text-amber-700 ring-1 ring-inset ring-amber-200">
-              <Crown size={11} />
-              Premium
-            </span>
-          )}
+
+          <div className="min-w-0">
+            <h4 className="truncate text-sm font-semibold text-gray-900">
+              {pkg.name}
+            </h4>
+
+            {pkg.level && (
+              <span className="mt-0.5 block text-[11px] text-gray-400">
+                Level {pkg.level}
+              </span>
+            )}
+          </div>
         </div>
 
-        <div className="mt-4 flex items-center justify-between">
-          <h4 className="text-base font-bold tracking-tight text-gray-900">
-            {pkg.name}
-          </h4>
-          {pkg.level && (
-            <span
-              className={`inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-semibold ${
-                premium ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600'
-              }`}
-            >
-              {pkg.level}
-            </span>
-          )}
-        </div>
-
-        {pkg.description && (
-          <p className="mt-2 line-clamp-2 text-sm leading-6 text-gray-500">
-            {pkg.description}
-          </p>
-        )}
+        {/* Status */}
+        {owned ? (
+          <span className="shrink-0 text-xs font-medium text-emerald-600">
+            Aktif
+          </span>
+        ) : premium ? (
+          <span className="shrink-0 rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-600">
+            Premium
+          </span>
+        ) : null}
       </div>
 
-      {/* Body */}
-      <div className="mt-auto px-6 pb-6">
-        <div className="mt-5 border-t border-gray-100 pt-5">
-          <div className="flex items-baseline gap-1">
-            <span className="text-2xl font-extrabold tracking-tight text-gray-900">
-              {formatCurrency(pkg.price)}
-            </span>
-            <span className="text-sm font-medium text-gray-400">
-              / 30 hari
-            </span>
-          </div>
-        </div>
+      {/* Description */}
+      {pkg.description && (
+        <p className="mt-2.5 line-clamp-2 text-xs leading-5 text-gray-500">
+          {pkg.description}
+        </p>
+      )}
 
-        <div className="mt-5">
-          {owned ? (
-            <Button
-              className="w-full"
-              variant="outline"
-              disabled
-            >
-              <CheckCircle2 size={15} />
-              Sudah Aktif
-            </Button>
-          ) : (
-            <Link to={`/payment/${pkg.id}`}>
-              <Button className="w-full">
-                Pilih Paket
-                <ArrowRight size={15} />
-              </Button>
-            </Link>
-          )}
+      {/* Price */}
+      <div className="mt-3 border-t border-gray-100 pt-3">
+        <div className="flex items-baseline gap-1">
+          <span className="text-lg font-bold tracking-tight text-gray-900">
+            {formatCurrency(pkg.price)}
+          </span>
+
+          <span className="text-[11px] text-gray-400">
+            / 30 hari
+          </span>
         </div>
+      </div>
+
+      {/* Action */}
+      <div className="mt-3">
+        {owned ? (
+          <Button
+            className="w-full"
+            variant="outline"
+            size="sm"
+            disabled
+          >
+            <CheckCircle2 size={14} />
+            Sudah Aktif
+          </Button>
+        ) : (
+          <Link to={`/payment/${pkg.id}`} className="block">
+            <Button className="w-full" size="sm">
+              Pilih Paket
+              <ArrowRight size={14} />
+            </Button>
+          </Link>
+        )}
       </div>
     </div>
   );

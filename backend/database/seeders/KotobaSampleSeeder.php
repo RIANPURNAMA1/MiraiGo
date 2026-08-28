@@ -24,60 +24,33 @@ class KotobaSampleSeeder extends Seeder
         $sswKaigoId = null;
 
         foreach ($cats as $c) {
-            $cat = KotobaCategory::create(array_merge($c, ['is_active' => true]));
+            $cat = KotobaCategory::updateOrCreate(
+                ['name' => $c['name']],
+                array_merge($c, ['is_active' => true])
+            );
             if ($c['name'] === 'JFT Basic') $jftBasicId = $cat->id;
             if ($c['name'] === 'SSW Kaigo') $sswKaigoId = $cat->id;
         }
 
         // JFT Basic - Kosakata Dasar
-        $topic1 = KotobaTopic::create([
-            'category_id' => $jftBasicId,
-            'name' => 'Kosakata Dasar',
-            'description' => 'Kosakata sehari-hari: sapaan, angka, waktu, dll.',
-            'order' => 1,
-            'is_active' => true,
-        ]);
+        $topics = [
+            ['category_id' => $jftBasicId, 'name' => 'Kosakata Dasar', 'description' => 'Kosakata sehari-hari: sapaan, angka, waktu, dll.', 'order' => 1],
+            ['category_id' => $jftBasicId, 'name' => 'Kehidupan Sehari-hari', 'description' => 'Kosakata untuk situasi kerja dan kehidupan sehari-hari di Jepang.', 'order' => 2],
+            ['category_id' => $jftBasicId, 'name' => 'Kerja & Kantor', 'description' => 'Kosakata untuk lingkungan kerja, kantor, dan instruksi kerja.', 'order' => 3],
+            ['category_id' => $sswKaigoId, 'name' => 'Istilah Perawatan Dasar', 'description' => 'Istilah dasar dalam perawatan lansia: aktivitas sehari-hari, kebersihan, dll.', 'order' => 1],
+            ['category_id' => $sswKaigoId, 'name' => 'Istilah Medis Kaigo', 'description' => 'Istilah medis yang berkaitan dengan perawatan lansia.', 'order' => 2],
+            ['category_id' => $sswKaigoId, 'name' => 'Komunikasi dengan Lansia', 'description' => 'Ungkapan dan kalimat untuk berkomunikasi dengan lansia.', 'order' => 3],
+        ];
 
-        $topic2 = KotobaTopic::create([
-            'category_id' => $jftBasicId,
-            'name' => 'Kehidupan Sehari-hari',
-            'description' => 'Kosakata untuk situasi kerja dan kehidupan sehari-hari di Jepang.',
-            'order' => 2,
-            'is_active' => true,
-        ]);
+        $topicModels = [];
+        foreach ($topics as $t) {
+            $topicModels[] = KotobaTopic::updateOrCreate(
+                ['category_id' => $t['category_id'], 'name' => $t['name']],
+                $t
+            );
+        }
 
-        $topic3 = KotobaTopic::create([
-            'category_id' => $jftBasicId,
-            'name' => 'Kerja & Kantor',
-            'description' => 'Kosakata untuk lingkungan kerja, kantor, dan instruksi kerja.',
-            'order' => 3,
-            'is_active' => true,
-        ]);
-
-        // SSW Kaigo
-        $topic4 = KotobaTopic::create([
-            'category_id' => $sswKaigoId,
-            'name' => 'Istilah Perawatan Dasar',
-            'description' => 'Istilah dasar dalam perawatan lansia: aktivitas sehari-hari, kebersihan, dll.',
-            'order' => 1,
-            'is_active' => true,
-        ]);
-
-        $topic5 = KotobaTopic::create([
-            'category_id' => $sswKaigoId,
-            'name' => 'Istilah Medis Kaigo',
-            'description' => 'Istilah medis yang berkaitan dengan perawatan lansia.',
-            'order' => 2,
-            'is_active' => true,
-        ]);
-
-        $topic6 = KotobaTopic::create([
-            'category_id' => $sswKaigoId,
-            'name' => 'Komunikasi dengan Lansia',
-            'description' => ' ungkapan dan kalimat untuk berkomunikasi dengan lansia.',
-            'order' => 3,
-            'is_active' => true,
-        ]);
+        [$topic1, $topic2, $topic3, $topic4, $topic5, $topic6] = $topicModels;
 
         // JFT Basic - Kosakata Dasar words
         $words1 = [
@@ -175,13 +148,14 @@ class KotobaSampleSeeder extends Seeder
         foreach ($allWords as [$topic, $words]) {
             $ids = [];
             foreach ($words as $w) {
-                $kotoba = Kotoba::create(array_merge($w, [
-                    'category_id' => $topic->category_id,
-                    'japanese' => $w['japanese'],
-                    'reading' => $w['reading'],
-                    'meaning' => $w['meaning'],
-                    'is_active' => true,
-                ]));
+                $kotoba = Kotoba::firstOrCreate(
+                    ['category_id' => $topic->category_id, 'japanese' => $w['japanese']],
+                    array_merge($w, [
+                        'category_id' => $topic->category_id,
+                        'is_active' => true,
+                        'order' => 0,
+                    ])
+                );
                 $ids[] = $kotoba->id;
             }
             $topic->kotoba()->sync($ids);

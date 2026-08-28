@@ -6,7 +6,7 @@ export default function Features() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* --- Header Section --- */}
         <div className="flex flex-col items-center text-center">
-          <span className="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-600 ring-1 ring-inset ring-indigo-500/20">
+          <span className="inline-flex items-center rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-600 ring-1 ring-inset ring-brand-500/20">
             Platform Cerdas
           </span>
           <h2 className="mt-6 max-w-2xl text-4xl font-medium tracking-tight text-gray-900 sm:text-5xl">
@@ -44,7 +44,7 @@ export default function Features() {
                       className="flex items-start gap-3 text-sm text-gray-600"
                     >
                       <svg
-                        className="h-5 w-5 shrink-0 text-[#673de6]"
+                        className="h-5 w-5 shrink-0 text-brand-600"
                         viewBox="0 0 20 20"
                         fill="currentColor"
                       >
@@ -62,7 +62,7 @@ export default function Features() {
                 {/* Link Text */}
                 <a
                   href={f.linkHref}
-                  className="mt-8 mb-10 inline-block text-sm font-medium text-[#673de6] hover:text-[#5b36cc] hover:underline"
+                  className="mt-8 mb-10 inline-block text-sm font-medium text-brand-600 hover:text-brand-700 hover:underline"
                 >
                   {f.linkText}
                 </a>

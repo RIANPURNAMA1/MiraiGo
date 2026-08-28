@@ -314,12 +314,23 @@ export interface KotobaItem {
   example_sentence: string | null;
   example_translation: string | null;
   order: number;
+  options: KotobaOption[] | null;
   is_active: boolean;
+  topics?: KotobaTopic[];
   created_at: string;
   updated_at: string;
 }
 
-export type KotobaInput = Omit<KotobaItem, 'id' | 'category' | 'created_at' | 'updated_at'>;
+export interface KotobaOption {
+  option: string;
+  option_text: string;
+  is_correct: boolean;
+}
+
+export type KotobaInput = Omit<KotobaItem, 'id' | 'category' | 'options' | 'topics' | 'created_at' | 'updated_at'> & {
+  options?: KotobaOption[];
+  topic_ids?: number[];
+};
 
 export interface KotobaTopic {
   id: number;

@@ -22,7 +22,7 @@ export function Header({ title, onMenuToggle }: { title: string; onMenuToggle?: 
           </button>
         )}
         {(title === 'Latihan Soal' || title === 'Dashboard' || title === 'Akses Modul' || title === 'Reservasi' || title === 'Latihan Kotoba' || title === 'Riwayat Tes' || title === 'Langganan' || title === 'Pembayaran' || title === 'Pengaturan') ? (
-          <button className="inline-flex items-center gap-2 rounded-full bg-brand-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-700">
+          <button className="inline-flex items-center gap-2 rounded-full bg-gradient-to-br from-[#025dd2] to-[#15a0f5] px-4 py-2 text-sm font-medium text-white transition-colors hover:from-[#0150b8] hover:to-[#0f96e0]">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M17 8v5m-2.5-2.5h5M12 7a3 3 0 11-6 0 3 3 0 016 0zM4 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>

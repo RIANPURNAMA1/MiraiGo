@@ -13,13 +13,14 @@ class Kotoba extends Model
 
     protected $fillable = [
         'category_id', 'japanese', 'reading', 'meaning',
-        'example_sentence', 'example_translation', 'order', 'is_active',
+        'example_sentence', 'example_translation', 'order', 'options', 'is_active',
     ];
 
     protected function casts(): array
     {
         return [
             'order' => 'integer',
+            'options' => 'array',
             'is_active' => 'boolean',
         ];
     }

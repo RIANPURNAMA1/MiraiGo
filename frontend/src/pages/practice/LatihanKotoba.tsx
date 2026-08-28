@@ -23,12 +23,12 @@ const iconMap: Record<string, typeof BookOpen> = {
 
 const typeColors: Record<string, string> = {
   JFT: 'bg-blue-50 text-blue-600 border-blue-200 hover:border-blue-300',
-  SSW: 'bg-amber-50 text-amber-600 border-amber-200 hover:border-amber-300',
+  SSW: 'bg-[#eaf6ff] text-[#18a6fc] border-[#bfe2fc] hover:border-[#8fd3fb]',
 };
 
 const fallbackColors = [
   'bg-emerald-50 text-emerald-600 border-emerald-200 hover:border-emerald-300',
-  'bg-purple-50 text-purple-600 border-purple-200 hover:border-purple-300',
+  'bg-[#eaf6ff] text-[#18a6fc] border-[#bfe2fc] hover:border-[#8fd3fb]',
   'bg-rose-50 text-rose-600 border-rose-200 hover:border-rose-300',
   'bg-teal-50 text-teal-600 border-teal-200 hover:border-teal-300',
   'bg-indigo-50 text-indigo-600 border-indigo-200 hover:border-indigo-300',

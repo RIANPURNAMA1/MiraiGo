@@ -14,7 +14,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Admin MiraiGo',
             'username' => 'admin',
             'email' => 'admin@miraigo.test',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('Admin123!'),
             'role' => 'admin',
             'status' => 'active',
         ]);
@@ -42,6 +42,8 @@ class DatabaseSeeder extends Seeder
             AnnouncementSeeder::class,
             CategorySeeder::class,
             ModuleCategorySeeder::class,
+            KotobaCategorySeeder::class,
+            KotobaSampleSeeder::class,
         ]);
     }
 }

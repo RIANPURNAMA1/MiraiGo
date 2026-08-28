@@ -5,7 +5,7 @@ export function WhatsAppButton({ phone = '6281234567890', message = 'Halo, saya 
   const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+    <div className="fixed bottom-28 right-4 z-50 flex flex-col items-end gap-3 md:bottom-6 md:right-6">
       {showTooltip && (
         <div className="rounded-xl bg-white px-4 py-3 shadow-lg ring-1 ring-black/5">
           <p className="text-sm font-medium text-gray-900">Butuh bantuan?</p>

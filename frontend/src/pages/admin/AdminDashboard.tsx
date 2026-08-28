@@ -11,6 +11,104 @@ function formatDate(value: string | null) {
   return new Date(value).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
 
+const DAYS = 7;
+
+function buildDailySeries(attempts: AdminDashboardData['recent_attempts']) {
+  const days = Array.from({ length: DAYS }, (_, i) => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - (DAYS - 1 - i));
+    return d;
+  });
+  const counts = days.map((day) => {
+    const key = day.toDateString();
+    return attempts.filter((a) => {
+      if (!a.submitted_at) return false;
+      return new Date(a.submitted_at).toDateString() === key;
+    }).length;
+  });
+  const max = Math.max(...counts, 1);
+  return { days, counts, max };
+}
+
+function ChartBar({ data }: { data: AdminDashboardData }) {
+  const { days, counts, max } = buildDailySeries(data.recent_attempts);
+  const barArea = 104;
+
+  return (
+    <Card>
+      <div className="flex items-center justify-between">
+        <h3 className="font-semibold text-gray-900">Aktivitas Tes 7 Hari Terakhir</h3>
+        <span className="rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-medium text-brand-700">
+          {data.recent_attempts.length} tes total
+        </span>
+      </div>
+      <div className="mt-4 flex items-end gap-2">
+        {days.map((day, i) => (
+          <div key={day.toISOString()} className="flex flex-1 flex-col items-center gap-1.5">
+            <span className="text-xs font-semibold text-gray-600">{counts[i]}</span>
+            <div
+              className="w-full max-w-[30px] rounded-t-md bg-gradient-to-t from-[#025dd2] to-[#15a0f5] transition-all"
+              style={{ height: `${(counts[i] / max) * barArea}px` }}
+            />
+            <span className="text-[10px] text-gray-400">
+              {day.toLocaleDateString('id-ID', { weekday: 'short' })}
+            </span>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
+const metricBars = [
+  { key: 'Pengguna', extract: (d: AdminDashboardData) => d.total_users },
+  { key: 'Soal', extract: (d: AdminDashboardData) => d.total_questions },
+  { key: 'Mengerjakan', extract: (d: AdminDashboardData) => d.total_attempts },
+  { key: 'Transaksi Paid', extract: (d: AdminDashboardData) => d.transactions },
+  { key: 'Reservasi', extract: (d: AdminDashboardData) => d.reservations },
+];
+
+function MetricChart({ data }: { data: AdminDashboardData }) {
+  const items = metricBars.map((m) => ({ key: m.key, value: m.extract(data) }));
+  const max = Math.max(...items.map((i) => i.value), 1);
+
+  return (
+    <Card>
+      <h3 className="font-semibold text-gray-900">Kinerja Platform</h3>
+      <p className="mt-0.5 text-xs text-gray-400">Perbandingan metrik utama platform.</p>
+      <div className="mt-4 space-y-4">
+        {items.map((item) => (
+          <div key={item.key}>
+            <div className="mb-1 flex items-center justify-between text-xs">
+              <span className="font-medium text-gray-600">{item.key}</span>
+              <span className="font-semibold text-gray-900">{item.value}</span>
+            </div>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-[#025dd2] to-[#15a0f5]"
+                style={{ width: `${(item.value / max) * 100}%` }}
+              />
+            </div>
+          </div>
+        ))}
+        <div>
+          <div className="mb-1 flex items-center justify-between text-xs">
+            <span className="font-medium text-gray-600">Rata-rata Skor</span>
+            <span className="font-semibold text-gray-900">{data.average_score}%</span>
+          </div>
+          <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400"
+              style={{ width: `${Math.min(data.average_score, 100)}%` }}
+            />
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 export default function AdminDashboard() {
   const [data, setData] = useState<AdminDashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -56,6 +154,11 @@ export default function AdminDashboard() {
             <p className={`mt-1 text-2xl font-bold ${s.tone}`}>{s.value}</p>
           </Card>
         ))}
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <ChartBar data={data} />
+        <MetricChart data={data} />
       </div>
 
       <Card className="overflow-hidden p-0">

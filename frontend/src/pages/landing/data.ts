@@ -58,7 +58,7 @@ export const keunggulan = [
     ],
     linkText: "Siapkan ujian SSW",
     linkHref: "#",
-    mockupBg: "bg-gradient-to-tr from-indigo-100 to-purple-50",
+    mockupBg: "bg-gradient-to-tr from-[#aee0fc] to-[#eaf6ff]",
   },
   {
     badge: "Ujian JFT",
@@ -71,7 +71,7 @@ export const keunggulan = [
     ],
     linkText: "Mulai latihan JFT",
     linkHref: "#",
-    mockupBg: "bg-gradient-to-tl from-purple-100 to-pink-50",
+    mockupBg: "bg-gradient-to-tl from-[#d4ebfc] to-[#f2f9ff]",
   },
 ];
 

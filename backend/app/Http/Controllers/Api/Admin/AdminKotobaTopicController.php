@@ -11,7 +11,7 @@ class AdminKotobaTopicController extends Controller
 {
     public function index(Request $request)
     {
-        $query = KotobaTopic::withCount('kotoba')->orderBy('category_id')->orderBy('order')->orderBy('id');
+        $query = KotobaTopic::withCount('kotoba')->with('kotoba:id')->orderBy('category_id')->orderBy('order')->orderBy('id');
 
         if ($categoryId = $request->get('category_id')) {
             $query->where('category_id', $categoryId);

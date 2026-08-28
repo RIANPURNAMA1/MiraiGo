@@ -10,14 +10,14 @@ const groups: NavGroupData[] = [
   {
     label: 'Latihan',
     items: [
-      { to: '/latihan-soal', label: 'Latihan Soal', icon: 'list' },
+      { to: '/latihan-soal', label: 'Tes Soal', icon: 'list' },
       { to: '/latihan-kotoba', label: 'Latihan Kotoba', icon: 'kotoba' },
     ],
   },
   {
     label: 'Layanan',
     items: [
-      { to: '/reservasi', label: 'Reservasi', icon: 'calendar' },
+      // { to: '/reservasi', label: 'Reservasi', icon: 'calendar' },
       { to: '/akses-modul', label: 'Akses Modul', icon: 'folder' },
     ],
   },

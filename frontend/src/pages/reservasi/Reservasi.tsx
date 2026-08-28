@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
-import { CalendarDays } from 'lucide-react';
+import { Modal } from '@/components/ui/Modal';
+import { CalendarDays, Construction } from 'lucide-react';
 
 interface Reservasi {
   id: number;
@@ -32,9 +33,28 @@ const dummyReservasi: Reservasi[] = [
 
 export default function Reservasi() {
   const [items] = useState<Reservasi[]>(dummyReservasi);
+  const [showDevNotice, setShowDevNotice] = useState(true);
 
   return (
     <div className="mx-auto max-w-6xl space-y-8 pb-12">
+      <Modal
+        isOpen={showDevNotice}
+        onClose={() => setShowDevNotice(false)}
+        size="sm"
+        footer={
+          <Button onClick={() => setShowDevNotice(false)}>Mengerti</Button>
+        }
+      >
+        <div className="flex flex-col items-center gap-3 py-2 text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-amber-100">
+            <Construction className="h-7 w-7 text-amber-600" />
+          </div>
+          <h3 className="text-base font-semibold text-gray-900">Dalam Pengembangan</h3>
+          <p className="text-sm text-gray-500">
+            Fitur Reservasi masih dalam tahap pengembangan. Mohon tunggu update selanjutnya ya!
+          </p>
+        </div>
+      </Modal>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-2xl font-semibold text-gray-900">Reservasi</h2>

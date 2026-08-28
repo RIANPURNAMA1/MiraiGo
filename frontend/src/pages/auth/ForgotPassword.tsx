@@ -33,7 +33,15 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="min-h-dvh bg-gray-50">
+    <div className="relative isolate min-h-dvh">
+      {/* Background image */}
+      <div
+        className="pointer-events-none fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat opacity-30"
+        style={{
+          backgroundImage:
+            'url("https://i.pinimg.com/736x/d3/06/90/d3069074a097a03eefd743add101a7d1.jpg")',
+        }}
+      />
       {/* Navbar */}
       <header className="border-b border-gray-100 bg-white">
         <div className="mx-auto flex h-16 max-w-5xl items-center px-6">
@@ -83,7 +91,7 @@ export default function ForgotPassword() {
               </Link>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-soft">
+            <form onSubmit={handleSubmit} className="space-y-4 rounded-md border border-gray-100 bg-white p-6 shadow-soft">
               {error && <Alert variant="error">{error}</Alert>}
 
               <div>

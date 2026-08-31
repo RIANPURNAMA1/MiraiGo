@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\ModulePremiumPaymentController;
 use App\Http\Controllers\Api\PackageController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ManualPaymentController;
+use App\Http\Controllers\Api\MiraigoSsoController;
 use App\Http\Controllers\Api\VoucherController;
 use App\Http\Controllers\Api\Admin\PaymentApprovalController;
 use App\Http\Controllers\Api\Admin\AdminKotobaCategoryController;
@@ -44,6 +45,7 @@ Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/auth/reset-password', [AuthController::class, 'resetPassword']);
+Route::post('/auth/sso-mendunia', [MiraigoSsoController::class, 'login']);
 
 /*
 |--------------------------------------------------------------------------
@@ -167,11 +169,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/vouchers', [AdminVoucherController::class, 'store']);
         Route::put('/vouchers/{voucher}', [AdminVoucherController::class, 'update']);
         Route::delete('/vouchers/{voucher}', [AdminVoucherController::class, 'destroy']);
-
-        Route::get('/module-categories', [\App\Http\Controllers\Api\Admin\AdminModuleManagementController::class, 'categories']);
-        Route::post('/module-categories', [\App\Http\Controllers\Api\Admin\AdminModuleManagementController::class, 'storeCategory']);
-        Route::put('/module-categories/{moduleCategory}', [\App\Http\Controllers\Api\Admin\AdminModuleManagementController::class, 'updateCategory']);
-        Route::delete('/module-categories/{moduleCategory}', [\App\Http\Controllers\Api\Admin\AdminModuleManagementController::class, 'destroyCategory']);
 
         Route::get('/modules', [\App\Http\Controllers\Api\Admin\AdminModuleManagementController::class, 'index']);
         Route::post('/modules', [\App\Http\Controllers\Api\Admin\AdminModuleManagementController::class, 'store']);

@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\LearningModule;
-use App\Models\ModuleCategory;
 use Illuminate\Support\Str;
 
 class AdminModuleManagementController extends Controller
@@ -22,12 +21,16 @@ class AdminModuleManagementController extends Controller
         }
 
         if (request('type') === 'premium') {
-            $query->where('is_premium', true);
+            $query->whereHas('category', fn ($q) => $q->where('is_premium', true));
         } elseif (request('type') === 'free') {
-            $query->where('is_premium', false);
+            $query->whereHas('category', fn ($q) => $q->where('is_premium', false));
         }
 
         $modules = $query->orderByDesc('id')->paginate(request('per_page', 15));
+
+        foreach ($modules->items() as $module) {
+            $module->setAttribute('is_premium', (bool) ($module->category?->is_premium ?? false));
+        }
 
         return $this->success([
             'items' => $modules->items(),
@@ -44,17 +47,13 @@ class AdminModuleManagementController extends Controller
         $data = request()->validate([
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'category_id' => ['nullable', 'integer', 'exists:module_categories,id'],
-            'is_premium' => ['boolean'],
-            'price' => ['nullable', 'integer', 'min:0'],
+            'category_id' => ['nullable', 'integer', 'exists:categories,id'],
             'status' => ['in:draft,published'],
             'external_url' => ['nullable', 'url', 'max:255'],
             'file' => ['nullable', 'file', 'max:20480'],
             'thumbnail' => ['nullable', 'file', 'max:2048'],
         ]);
 
-        $data['is_premium'] = $data['is_premium'] ?? false;
-        $data['price'] = $data['price'] ?? 0;
         $data['status'] = $data['status'] ?? 'draft';
 
         if (isset($data['file'])) {
@@ -81,9 +80,7 @@ class AdminModuleManagementController extends Controller
         $data = request()->validate([
             'title' => ['sometimes', 'required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'category_id' => ['nullable', 'integer', 'exists:module_categories,id'],
-            'is_premium' => ['boolean'],
-            'price' => ['nullable', 'integer', 'min:0'],
+            'category_id' => ['nullable', 'integer', 'exists:categories,id'],
             'status' => ['in:draft,published'],
             'external_url' => ['nullable', 'url', 'max:255'],
             'file' => ['nullable', 'file', 'max:20480'],
@@ -126,47 +123,5 @@ class AdminModuleManagementController extends Controller
         ]);
 
         return $this->success($module->load('category'), 'Status updated.');
-    }
-
-    public function categories()
-    {
-        $categories = ModuleCategory::orderBy('name')->get();
-
-        return $this->success($categories);
-    }
-
-    public function storeCategory()
-    {
-        $data = request()->validate([
-            'name' => ['required', 'string', 'max:255'],
-        ]);
-
-        $data['slug'] = Str::slug($data['name']);
-
-        $category = ModuleCategory::create($data);
-
-        return $this->success($category, 'Kategori dibuat.', 201);
-    }
-
-    public function updateCategory(ModuleCategory $moduleCategory)
-    {
-        $data = request()->validate([
-            'name' => ['sometimes', 'required', 'string', 'max:255'],
-        ]);
-
-        if (isset($data['name'])) {
-            $data['slug'] = Str::slug($data['name']);
-        }
-
-        $moduleCategory->update($data);
-
-        return $this->success($moduleCategory, 'Kategori diperbarui.');
-    }
-
-    public function destroyCategory(ModuleCategory $moduleCategory)
-    {
-        $moduleCategory->delete();
-
-        return $this->success([], 'Kategori dihapus.');
     }
 }

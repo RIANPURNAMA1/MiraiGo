@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Pagination } from "@/components/ui/Pagination";
 import { fetchPackages, fetchCategories } from "@/services/packages";
 import type { Category, Package } from "@/types";
+import { getCategoryIcon } from "@/constants/categoryIcons";
 import {
   ArrowLeft,
   ArrowRight,
@@ -20,6 +21,7 @@ import {
   Lock,
   Play,
   RotateCcw,
+  CheckCircle2,
 } from "lucide-react";
 
 const categoryStyles: Record<string, { icon: typeof BookOpen; color: string }> =
@@ -54,37 +56,18 @@ const fallbackStyles = [
 ];
 
 function getCatStyle(cat: Category, index: number) {
-  if (categoryStyles[cat.slug]) return categoryStyles[cat.slug];
-  return fallbackStyles[index % fallbackStyles.length];
-}
+  let style = categoryStyles[cat.slug];
+  if (!style) style = fallbackStyles[index % fallbackStyles.length];
 
-const MIN_PACKAGES = 50;
-const PAGE_SIZE = 15;
-
-function padPackages(list: Package[], min: number, catName: string): Package[] {
-  if (list.length >= min) return list;
-  const out = [...list];
-  for (let i = out.length + 1; out.length < min; i++) {
-    out.push({
-      id: -i,
-      name: `${catName} - Paket Seri ${i}`,
-      slug: `dummy-${catName}-${i}`,
-      category: null,
-      description: "Paket latihan simulasi untuk menguji tampilan kartu dan pagination.",
-      level: ["A1", "A2", "B1"][i % 3],
-      duration_minutes: 30,
-      price: 0,
-      is_premium: false,
-      status: "published",
-      thumbnail: null,
-      total_questions: 20,
-      progress: i % 5 === 0 ? 100 : (i * 7) % 100,
-      access_state:
-        i % 5 === 0 ? "completed" : i % 6 === 0 ? "locked" : "active",
-    } satisfies Package);
+  // Use the admin-chosen icon when one is set; otherwise keep the default.
+  if (cat.icon) {
+    return { icon: getCategoryIcon(cat.icon), color: style.color };
   }
-  return out;
+
+  return style;
 }
+
+const PAGE_SIZE = 15;
 
 export default function LatihanSoal() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -133,28 +116,24 @@ export default function LatihanSoal() {
       fetchPackages({
         search: search || undefined,
         category: selectedCategory,
-        page: 1,
+        page,
+        per_page: PAGE_SIZE,
       })
         .then((res) => {
-          const padded = padPackages(
-            res.items,
-            MIN_PACKAGES,
-            selectedCat?.name ?? selectedCategory,
-          );
-          setItems(padded);
-          setLastPage(Math.ceil(padded.length / PAGE_SIZE));
+          setItems(res.items);
+          setLastPage(res.meta.last_page ?? 1);
         })
         .finally(() => {
           setIsLoading(false);
           setPackagesLoaded(true);
-          setShowModuleAlert(true);
+          if (page === 1 && !search) setShowModuleAlert(true);
         });
     }, 300);
     return () => clearTimeout(t);
-  }, [selectedCategory, search]);
+  }, [selectedCategory, search, page]);
 
   const selectedCat = categories.find((c) => c.slug === selectedCategory);
-  const visibleItems = items.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const visibleItems = items;
 
   return (
     <div className="mx-auto max-w-6xl space-y-8 pb-12">
@@ -187,10 +166,14 @@ export default function LatihanSoal() {
                 const style = getCatStyle(cat, i);
                 const Icon = style.icon;
 
-                return (
-                  <button
+                  return (
+                    <button
                     key={cat.slug}
                     onClick={() => {
+                      if (cat.is_premium && !cat.has_access) {
+                        navigate("/subscription");
+                        return;
+                      }
                       setSelectedCategory(cat.slug);
                       setSearch("");
                       setPage(1);
@@ -205,9 +188,23 @@ export default function LatihanSoal() {
                     {/* Content */}
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-3">
-                        <h3 className="truncate text-sm font-semibold text-gray-900">
-                          {cat.name}
-                        </h3>
+                        <div className="flex min-w-0 items-center gap-2">
+                          <h3 className="truncate text-sm font-semibold text-gray-900">
+                            {cat.name}
+                          </h3>
+                          {cat.is_premium &&
+                            (cat.has_access ? (
+                              <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-600">
+                                <CheckCircle2 size={10} />
+                                Aktif
+                              </span>
+                            ) : (
+                              <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-600">
+                                <Lock size={10} />
+                                Premium
+                              </span>
+                            ))}
+                        </div>
 
                         <svg
                           width="16"
@@ -238,7 +235,7 @@ export default function LatihanSoal() {
                       </div>
                     </div>
                   </button>
-                );
+                  );
               })}
             </div>
           )}

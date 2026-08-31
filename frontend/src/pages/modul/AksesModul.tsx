@@ -5,12 +5,13 @@ import { Button } from '@/components/ui/Button';
 import { Link } from 'react-router-dom';
 import { LoadingState } from '@/components/ui/LoadingState';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { useAuth } from '@/stores/AuthContext';
 import { api, ROOT_URL } from '@/services/api';
-import { fetchModules, fetchModulePurchases } from '@/services/modules';
-import { fetchModulePremiumAccess, fetchModulePremiumPayments } from '@/services/modulePremium';
+import { fetchModules } from '@/services/modules';
+import { fetchCategories } from '@/services/packages';
+import { fetchModulePremiumPayments } from '@/services/modulePremium';
 import type { ModulePremiumPaymentItem } from '@/services/modulePremium';
-import type { LearningModule, ModulePurchase } from '@/types';
+import type { Category, LearningModule } from '@/types';
+import { getCategoryIcon } from '@/constants/categoryIcons';
 import {
   BookOpen,
   FileText,
@@ -27,6 +28,7 @@ import {
   ReceiptText,
   Clock,
   Download,
+  CheckCircle2,
 } from 'lucide-react';
 
 function buildFileUrl(m: LearningModule): string | null {
@@ -67,40 +69,37 @@ function formatPrice(n: number) {
 }
 
 export default function AksesModul() {
-  const { user } = useAuth();
-  const isMendunia = user?.role === 'studentmendunia';
   const [modules, setModules] = useState<LearningModule[]>([]);
-  const [purchases, setPurchases] = useState<ModulePurchase[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [premiumPrice, setPremiumPrice] = useState(0);
-  const [hasPremiumAccess, setHasPremiumAccess] = useState(false);
   const [premiumPayments, setPremiumPayments] = useState<ModulePremiumPaymentItem[]>([]);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   useEffect(() => {
+    fetchCategories()
+      .then(setCategories)
+      .catch(() => {});
     fetchModules()
       .then((res) => setModules(res.items))
       .catch(() => {})
       .finally(() => setIsLoading(false));
-    fetchModulePurchases()
-      .then(setPurchases)
-      .catch(() => {});
     api.get('/module-premium-settings').then((res) => {
       setPremiumPrice(res.data.data?.premium_price ?? 0);
     }).catch(() => {});
-    fetchModulePremiumAccess().then((a) => setHasPremiumAccess(!!a.has_access)).catch(() => {});
     fetchModulePremiumPayments().then((d) => setPremiumPayments(d.payments ?? [])).catch(() => {});
   }, []);
 
-  const purchasedIds = new Set(purchases.filter((p) => p.status === 'active').map((p) => p.module_id));
+  const grouped = categories.map((cat) => ({
+    cat,
+    modul: modules.filter((m) => m.category?.id === cat.id),
+  }));
 
-  const freeModules = isMendunia
-    ? modules
-    : modules.filter((m) => !m.is_premium);
+  const catIds = new Set(categories.map((c) => c.id));
+  const uncategorized = modules.filter((m) => !m.category_id || !catIds.has(m.category_id));
 
-  const premiumModules = isMendunia
-    ? []
-    : modules.filter((m) => m.is_premium);
+  const premiumModules = modules.filter((m) => m.is_premium);
+  const premiumLocked = premiumModules.some((m) => !m.accessible);
 
   if (isLoading) return <LoadingState label="Memuat modul..." />;
 
@@ -155,113 +154,70 @@ export default function AksesModul() {
         </ul>
       </Card>
 
-      {/* Access Cards */}
-      <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
-        {/* ================= FREE ================= */}
+      {/* Category sections */}
+      {grouped.map(({ cat, modul }) => (
+        <CategoryBlock key={cat.id} cat={cat} modul={modul} />
+      ))}
+
+      {/* Modules without a category */}
+      {uncategorized.length > 0 && (
         <Card className="overflow-hidden border-gray-200 p-0 shadow-sm">
           <div className="border-b border-gray-100 px-4 py-4 sm:px-6 sm:py-5">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-700">
-                  <BookOpen size={19} />
-                </div>
-                <div className="min-w-0">
-                  <h3 className="text-sm font-semibold text-gray-900">Akses Modul Free</h3>
-                  <p className="mt-0.5 truncate text-xs text-gray-500">Materi yang dapat diakses secara gratis</p>
-                </div>
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-700">
+                <BookOpen size={18} />
               </div>
-              <span className="shrink-0 rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-medium text-gray-600">FREE</span>
+              <div className="min-w-0">
+                <h3 className="text-sm font-semibold text-gray-900">Modul Lainnya</h3>
+                <p className="mt-0.5 truncate text-xs text-gray-500">
+                  Modul yang belum masuk kategori mana pun.
+                </p>
+              </div>
             </div>
           </div>
-
           <div className="divide-y divide-gray-100">
-            {freeModules.length === 0 ? (
-              <div className="px-4 py-8 sm:px-6">
-                <EmptyState title="Belum ada modul gratis." />
-              </div>
-            ) : (
-              freeModules.map((m) => (
-                <ModuleRow key={m.id} modul={m} locked={false} />
-              ))
-            )}
+            {uncategorized.map((m) => (
+              <ModuleRow key={m.id} modul={m} locked={!m.accessible} />
+            ))}
           </div>
+        </Card>
+      )}
 
-          <div className="border-t border-gray-100 px-4 py-4 sm:px-6">
-            <div className="flex items-center gap-2 text-xs text-gray-500">
-              <Check size={14} className="text-gray-700" />
-              <span>{freeModules.length} modul tersedia secara gratis</span>
+      {/* Upgrade / all-open bar */}
+      {premiumLocked ? (
+        <Card className="border-gray-200 bg-gray-50 p-0 shadow-sm">
+          <div className="flex flex-col gap-3 px-4 py-4 transition-colors sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6">
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-gray-900">Mau akses semua sekaligus?</p>
+              <div className="mt-1 flex flex-wrap items-center gap-2">
+                <p className="text-xs text-gray-500">
+                  Upgrade paket untuk buka semua modul premium yang masih terkunci.
+                </p>
+                {premiumModules.length > 0 && premiumPrice > 0 && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-bold text-amber-700 ring-1 ring-inset ring-amber-200">
+                    <Crown size={11} />
+                    Rp{formatPrice(premiumPrice)} / selamanya
+                  </span>
+                )}
+              </div>
+            </div>
+            <Button size="sm" className="shrink-0" onClick={() => setShowUpgradeModal(true)}>
+              Upgrade Paket
+              <ArrowRight size={14} />
+            </Button>
+          </div>
+        </Card>
+      ) : (
+        <Card className="border-green-200 bg-green-50 p-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <BadgeCheck size={20} className="shrink-0 text-green-600" />
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-gray-900">Semua Modul Terbuka</p>
+              <p className="text-xs text-gray-600">Anda memiliki akses ke seluruh modul yang tersedia.</p>
             </div>
           </div>
         </Card>
-
-        {/* ================= PREMIUM ================= */}
-        <Card className="overflow-hidden border-gray-200 p-0 shadow-sm">
-          <div className="h-0.5 bg-gray-900" />
-            <div className="border-b border-gray-100 px-4 py-4 sm:px-6 sm:py-5">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex min-w-0 items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-yellow-500 text-black">
-                    <Crown size={18} />
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="text-sm font-semibold text-gray-900">Akses Modul Premium</h3>
-                    <p className="mt-0.5 truncate text-xs text-gray-500">Materi eksklusif — beli satuan atau upgrade paket</p>
-                  </div>
-                </div>
-                <span className="shrink-0 rounded-full bg-gray-900 px-2.5 py-1 text-[11px] font-medium text-white">PREMIUM</span>
-              </div>
-            </div>
-
-            <div className="divide-y divide-gray-100">
-              {premiumModules.length === 0 ? (
-                <div className="px-4 py-8 sm:px-6">
-                  <EmptyState title="Belum ada modul premium." />
-                </div>
-              ) : (
-                premiumModules.map((m) => (
-                  <ModuleRow
-                    key={m.id}
-                    modul={m}
-                    locked={!purchasedIds.has(m.id) && !hasPremiumAccess}
-                  />
-                ))
-              )}
-            </div>
-
-            <div className="border-t border-gray-100 bg-gray-50 px-4 py-4 sm:px-6">
-              {hasPremiumAccess ? (
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-                  <div className="flex items-center gap-3">
-                    <BadgeCheck size={20} className="shrink-0 text-green-500" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">Akses Modul Premium Aktif</p>
-                      <p className="text-xs text-gray-500">Semua modul premium telah terbuka untuk Anda.</p>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">Mau akses semua sekaligus?</p>
-                    <div className="mt-1 flex flex-wrap items-center gap-2">
-                      <p className="text-xs text-gray-500">Upgrade paket untuk buka semua modul premium.</p>
-                      {premiumModules.length > 0 && premiumPrice > 0 && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-bold text-amber-700 ring-1 ring-inset ring-amber-200">
-                          <Crown size={11} />
-                          Rp{formatPrice(premiumPrice)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <Button size="sm" className="shrink-0" onClick={() => setShowUpgradeModal(true)}>
-                    Upgrade Paket
-                    <ArrowRight size={14} />
-                  </Button>
-                </div>
-              )}
-            </div>
-          </Card>
-      </div>
+      )}
 
       {/* Upgrade modal */}
       {showUpgradeModal &&
@@ -394,6 +350,75 @@ export default function AksesModul() {
         </div>
       </Card>
     </div>
+  );
+}
+
+/* =========================================================
+   CATEGORY BLOCK
+========================================================= */
+
+function CategoryBlock({ cat, modul }: { cat: Category; modul: LearningModule[] }) {
+  const Icon = getCategoryIcon(cat.icon);
+  const hasAccess = !!cat.has_access;
+
+  return (
+    <Card className="overflow-hidden border-gray-200 p-0 shadow-sm">
+      <div className="border-b border-gray-100 px-4 py-4 sm:px-6 sm:py-5">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-700">
+              <Icon size={19} />
+            </div>
+            <div className="min-w-0">
+              <div className="flex min-w-0 items-center gap-2">
+                <h3 className="truncate text-sm font-semibold text-gray-900">{cat.name}</h3>
+                {cat.is_premium &&
+                  (hasAccess ? (
+                    <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-600">
+                      <CheckCircle2 size={10} />
+                      Aktif
+                    </span>
+                  ) : (
+                    <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-600">
+                      <Lock size={10} />
+                      Premium
+                    </span>
+                  ))}
+              </div>
+              {cat.description && (
+                <p className="mt-0.5 truncate text-xs text-gray-500">{cat.description}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="flex shrink-0 flex-col items-end gap-1.5">
+            {cat.is_premium && !hasAccess && (
+              <Link
+                to="/subscription"
+                className="inline-flex items-center gap-1 rounded-md bg-gray-900 px-2.5 py-1 text-[11px] font-semibold text-white transition-colors hover:bg-gray-700"
+              >
+                <Crown size={11} />
+                Upgrade
+              </Link>
+            )}
+            <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-medium text-gray-600">
+              <BookOpen size={12} />
+              {modul.length} modul
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="divide-y divide-gray-100">
+        {modul.length === 0 ? (
+          <div className="px-4 py-8 sm:px-6">
+            <EmptyState title="Belum ada modul di kategori ini." />
+          </div>
+        ) : (
+          modul.map((m) => <ModuleRow key={m.id} modul={m} locked={!m.accessible} />)
+        )}
+      </div>
+    </Card>
   );
 }
 

@@ -8,6 +8,7 @@ use App\Models\Payment;
 use App\Models\Transaction;
 use App\Models\TransactionItem;
 use App\Models\Voucher;
+use App\Services\AccessService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -56,14 +57,17 @@ class ManualPaymentController extends Controller
 
         $package = Package::findOrFail($data['package_id']);
 
-        if (! $package->is_premium) {
+        $accessService = new AccessService();
+
+        if (! $accessService->isPremiumPackage($package)) {
             return $this->error('Paket ini gratis, tidak perlu pembayaran.', [], 422);
         }
 
-        // Check if user already has active access
+        // Check if user already has active access to the whole category
         $user = Auth::user();
+        $categoryAccessIds = $accessService->packagesInCategory($package)->pluck('id');
         $hasAccess = \App\Models\UserPackageAccess::where('user_id', $user->id)
-            ->where('package_id', $package->id)
+            ->whereIn('package_id', $categoryAccessIds)
             ->where('status', 'active')
             ->where(function ($q) {
                 $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
@@ -71,8 +75,10 @@ class ManualPaymentController extends Controller
             ->exists();
 
         if ($hasAccess) {
-            return $this->error('Anda sudah memiliki akses aktif untuk paket ini.', [], 422);
+            return $this->error('Anda sudah memiliki akses aktif untuk kategori ini.', [], 422);
         }
+
+        $packagePrice = $accessService->packagePrice($package);
 
         // Apply voucher
         $discount = 0;
@@ -82,12 +88,12 @@ class ManualPaymentController extends Controller
             if (! $voucher || ! $voucher->isValid()) {
                 return $this->error('Voucher tidak valid atau sudah kedaluwarsa.', [], 422);
             }
-            $discount = $voucher->calculateDiscount($package->price);
+            $discount = $voucher->calculateDiscount($packagePrice);
             // Increment usage
             $voucher->increment('used_count');
         }
 
-        $finalAmount = $package->price - $discount;
+        $finalAmount = max(0, $packagePrice - $discount);
 
         // Upload proof
         $path = $request->file('proof_image')->store('payment-proofs', 'public');
@@ -104,7 +110,7 @@ class ManualPaymentController extends Controller
         TransactionItem::create([
             'transaction_id' => $transaction->id,
             'package_id'     => $package->id,
-            'price'          => $package->price,
+            'price'          => $packagePrice,
         ]);
 
         // Create payment with proof
@@ -120,7 +126,7 @@ class ManualPaymentController extends Controller
         return $this->success([
             'id'              => $payment->id,
             'invoice_number'  => $invoiceNumber,
-            'original_price'  => (int) $package->price,
+            'original_price'  => (int) $packagePrice,
             'discount'        => $discount,
             'total_amount'    => $finalAmount,
             'package_name'    => $package->name,

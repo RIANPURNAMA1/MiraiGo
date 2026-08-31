@@ -42,7 +42,7 @@ const emptyOptions = (): OptionDraft[] => [
 function mediaUrl(path: string | null): string | null {
   if (!path) return null;
   if (path.startsWith('http')) return path;
-  return `${API_ROOT}/../storage/${path}`;
+  return `${API_ROOT}/storage/${path}`;
 }
 
 /* ──────────────────────────────────────────────────────── */

@@ -173,7 +173,7 @@ export default function AdminPackages() {
                     <th className="px-5 py-3 font-medium">Kategori</th>
                     <th className="px-5 py-3 font-medium">Level</th>
                     <th className="px-5 py-3 font-medium">Section</th>
-                    <th className="px-5 py-3 font-medium">Harga</th>
+                    <th className="px-5 py-3 font-medium">Berbayar</th>
                     <th className="px-5 py-3 font-medium">Status</th>
                     <th className="px-5 py-3 font-medium">Aksi</th>
                   </tr>
@@ -187,7 +187,7 @@ export default function AdminPackages() {
                       <td className="px-5 py-3 text-gray-700">{p.level ?? '-'}</td>
                       <td className="px-5 py-3 text-gray-700">{p.sections_count ?? 0}</td>
                       <td className="px-5 py-3 text-gray-700">
-                        {p.is_premium ? `Rp ${p.price.toLocaleString('id-ID')}` : 'Gratis'}
+                        {p.is_premium ? 'Premium' : 'Gratis'}
                       </td>
                       <td className="px-5 py-3">
                         <Badge variant={p.status === 'published' ? 'success' : 'warning'}>{p.status}</Badge>
@@ -253,29 +253,20 @@ export default function AdminPackages() {
               value={String(form.duration_minutes ?? 30)}
               onChange={(e) => setForm({ ...form, duration_minutes: Number(e.target.value) })}
             />
-            <Input
-              label="Harga (Rp)"
-              type="number"
-              value={String(form.price ?? 0)}
-              onChange={(e) => setForm({ ...form, price: Number(e.target.value) })}
-            />
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-gray-700">Status</label>
+              <Select
+                value={form.status}
+                onChange={(e) => setForm({ ...form, status: e.target.value as 'draft' | 'published' })}
+              >
+                <option value="draft">Draft</option>
+                <option value="published">Published</option>
+              </Select>
+            </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <Select
-              value={form.status}
-              onChange={(e) => setForm({ ...form, status: e.target.value as 'draft' | 'published' })}
-            >
-              <option value="draft">Draft</option>
-              <option value="published">Published</option>
-            </Select>
-            <label className="flex items-center gap-2 text-sm text-gray-700">
-              <input
-                type="checkbox"
-                checked={!!form.is_premium}
-                onChange={(e) => setForm({ ...form, is_premium: e.target.checked })}
-              />
-              Premium
-            </label>
+          <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2.5 text-xs text-gray-500">
+            Harga & status premium paket diatur melalui kategori. Paket akan otomatis
+            terkunci bila kategorinya premium.
           </div>
           <div className="flex flex-col-reverse gap-2 border-t border-gray-100 pt-4 sm:flex-row sm:justify-end">
             <Button type="button" variant="ghost" onClick={() => setModalOpen(false)} className="w-full sm:w-auto">

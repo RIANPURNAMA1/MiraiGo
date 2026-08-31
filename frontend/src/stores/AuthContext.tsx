@@ -7,6 +7,7 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  completeAuth: (user: User, token: string) => void;
   logout: () => Promise<void>;
 }
 
@@ -19,17 +20,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
   const [isLoading, setIsLoading] = useState(false);
 
+  const completeAuth = useCallback((user: User, token: string) => {
+    localStorage.setItem('ssw_token', token);
+    localStorage.setItem('ssw_user', JSON.stringify(user));
+    setUser(user);
+  }, []);
+
   const login = useCallback(async (email: string, password: string) => {
     setIsLoading(true);
     try {
       const { user, token } = await loginApi(email, password);
-      localStorage.setItem('ssw_token', token);
-      localStorage.setItem('ssw_user', JSON.stringify(user));
-      setUser(user);
+      completeAuth(user, token);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [completeAuth]);
 
   const logout = useCallback(async () => {
     try {
@@ -42,7 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, login, completeAuth, logout }}>
       {children}
     </AuthContext.Provider>
   );

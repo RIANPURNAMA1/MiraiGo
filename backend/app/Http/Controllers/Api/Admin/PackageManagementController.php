@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StorePackageRequest;
 use App\Http\Resources\PackageResource;
 use App\Models\Package;
+use App\Services\AccessService;
 use Illuminate\Support\Str;
 
 class PackageManagementController extends Controller
@@ -22,6 +23,13 @@ class PackageManagementController extends Controller
         }
 
         $packages = $query->orderByDesc('id')->paginate(request('per_page', 15));
+
+        // Reflect category-level premium/price so the admin table is accurate.
+        $accessService = new AccessService();
+        $packages->getCollection()->each(function (Package $package) use ($accessService) {
+            $package->is_premium = $accessService->isPremiumPackage($package);
+            $package->price = $accessService->packagePrice($package);
+        });
 
         return $this->success([
             'items' => $packages->items(),

@@ -13,7 +13,7 @@ import {
   fetchAdminModules,
   toggleAdminModule,
   updateAdminModule,
-  fetchAdminModuleCategories,
+  fetchAdminCategories,
   type AdminModuleItem,
   type AdminModuleFilters,
 } from '@/services/admin';
@@ -22,14 +22,13 @@ import { Upload, X, FileText, ExternalLink } from 'lucide-react';
 interface ModuleCategory {
   id: number;
   name: string;
+  is_premium?: boolean;
 }
 
 interface ModuleForm {
   title: string;
   description: string;
   category_id: number | null;
-  is_premium: boolean;
-  price: number;
   status: 'draft' | 'published';
   external_url: string;
 }
@@ -38,8 +37,6 @@ const emptyForm: ModuleForm = {
   title: '',
   description: '',
   category_id: null,
-  is_premium: false,
-  price: 0,
   status: 'draft',
   external_url: '',
 };
@@ -85,7 +82,15 @@ export default function AdminModules() {
   }, [load]);
 
   useEffect(() => {
-    fetchAdminModuleCategories().then(setCategories).catch(() => {});
+    fetchAdminCategories({ per_page: 100 })
+      .then((res) =>
+        setCategories(
+          res.items
+            .filter((c) => c.is_active)
+            .map((c) => ({ id: c.id, name: c.name, is_premium: c.is_premium }))
+        )
+      )
+      .catch(() => {});
   }, []);
 
   function openCreate() {
@@ -104,8 +109,6 @@ export default function AdminModules() {
       title: mod.title,
       description: mod.description ?? '',
       category_id: mod.category_id,
-      is_premium: mod.is_premium,
-      price: mod.price ?? 0,
       status: mod.status,
       external_url: mod.external_url ?? '',
     });
@@ -170,8 +173,6 @@ export default function AdminModules() {
       fd.append('title', form.title);
       fd.append('description', form.description);
       fd.append('status', form.status);
-      fd.append('is_premium', form.is_premium ? '1' : '0');
-      fd.append('price', String(form.price));
       if (form.category_id) fd.append('category_id', String(form.category_id));
       if (form.external_url) fd.append('external_url', form.external_url);
       if (file) fd.append('file', file);
@@ -384,7 +385,7 @@ export default function AdminModules() {
 
           {/* Category */}
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-gray-700">Kategori</label>
+            <label className="mb-1.5 block text-xs font-medium text-gray-700">Kategori (Kategori Soal)</label>
             <select
               value={form.category_id ?? ''}
               onChange={(e) => setForm({ ...form, category_id: e.target.value ? Number(e.target.value) : null })}
@@ -392,35 +393,31 @@ export default function AdminModules() {
             >
               <option value="">— Pilih Kategori —</option>
               {categories.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
+                <option key={c.id} value={c.id}>
+                  {c.name}{c.is_premium ? ' (Premium)' : ''}
+                </option>
               ))}
             </select>
+            <p className="mt-1 text-[11px] text-gray-400">
+              Kategori ini sama dengan Kategori Soal. Saat user membeli kategori
+              premium ini, modul premium di dalamnya otomatis ikut terbuka.
+            </p>
           </div>
 
-          {/* Type + Status */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-gray-700">Akses</label>
-              <select
-                value={form.is_premium ? 'premium' : 'free'}
-                onChange={(e) => setForm({ ...form, is_premium: e.target.value === 'premium' })}
-                className="w-full rounded-md border border-gray-200 px-3 py-2.5 text-sm text-gray-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
-              >
-                <option value="free">Free</option>
-                <option value="premium">Premium</option>
-              </select>
-            </div>
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-gray-700">Status</label>
-              <select
-                value={form.status}
-                onChange={(e) => setForm({ ...form, status: e.target.value as 'draft' | 'published' })}
-                className="w-full rounded-md border border-gray-200 px-3 py-2.5 text-sm text-gray-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
-              >
-                <option value="draft">Draft</option>
-                <option value="published">Published</option>
-              </select>
-            </div>
+          {/* Status */}
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-gray-700">Status</label>
+            <select
+              value={form.status}
+              onChange={(e) => setForm({ ...form, status: e.target.value as 'draft' | 'published' })}
+              className="w-full rounded-md border border-gray-200 px-3 py-2.5 text-sm text-gray-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+            >
+              <option value="draft">Draft</option>
+              <option value="published">Published</option>
+            </select>
+            <p className="mt-1 text-[11px] text-gray-400">
+              Akses (Free/Premium) modul ini mengikuti Kategori di atas, bukan diatur manual.
+            </p>
           </div>
 
           {/* External URL */}

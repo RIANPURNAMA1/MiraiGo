@@ -220,3 +220,10 @@ miraigo/
 
 
 -untuk kandidat mendunia itu bakalan ada voucher untuk bisa aksesnya per batch itu untuk membuka akses soal paket nya
+
+-tonton video pembelajaran sampai selesai 
+-baca modul pembelajaran samai activity hijau 
+-instruktur membuka paket soal  
+-mulai mengerjakan Quiz 
+    fitur kamera deketsi menyontek 
+    fitur close aplikasi

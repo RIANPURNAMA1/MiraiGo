@@ -10,6 +10,7 @@ import Login from '@/pages/auth/Login';
 import Register from '@/pages/auth/Register';
 import ForgotPassword from '@/pages/auth/ForgotPassword';
 import ResetPassword from '@/pages/auth/ResetPassword';
+import SsoCallback from '@/pages/auth/SsoCallback';
 import Landing from '@/pages/landing/Landing';
 import Dashboard from '@/pages/dashboard/Dashboard';
 import Practice from '@/pages/practice/Practice';
@@ -41,11 +42,9 @@ import AdminVouchers from '@/pages/admin/AdminVouchers';
 import AdminSettings from '@/pages/admin/AdminSettings';
 import AdminCategories from '@/pages/admin/AdminCategories';
 import AdminModules from '@/pages/admin/AdminModules';
-import AdminModuleCategories from '@/pages/admin/AdminModuleCategories';
 import AdminKotobaCategories from '@/pages/admin/AdminKotobaCategories';
 import AdminKotoba from '@/pages/admin/AdminKotoba';
 import AdminKotobaTopics from '@/pages/admin/AdminKotobaTopics';
-import AdminModulePremium from '@/pages/admin/AdminModulePremium';
 import UpgradeAkses from '@/pages/practice/UpgradeAkses';
 
 function HomeRedirect() {
@@ -73,6 +72,7 @@ function AppRoutes() {
       <Route path="/register" element={<RegisterRoute />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/sso" element={<SsoCallback />} />
 
       {/* Quiz uses its own full-screen layout — no sidebar/header. */}
       <Route
@@ -138,7 +138,6 @@ function AppRoutes() {
       >
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/categories" element={<AdminCategories />} />
-        <Route path="/admin/module-categories" element={<AdminModuleCategories />} />
         <Route path="/admin/modules" element={<AdminModules />} />
         <Route path="/admin/packages" element={<AdminPackages />} />
         <Route path="/admin/questions" element={<AdminQuestions />} />
@@ -149,7 +148,6 @@ function AppRoutes() {
         <Route path="/admin/subscribers" element={<AdminSubscribers />} />
         <Route path="/admin/payments" element={<AdminPayments />} />
         <Route path="/admin/vouchers" element={<AdminVouchers />} />
-        <Route path="/admin/module-premium" element={<AdminModulePremium />} />
         <Route path="/admin/settings" element={<AdminSettings />} />
       </Route>
 

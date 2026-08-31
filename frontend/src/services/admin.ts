@@ -236,6 +236,7 @@ export async function deleteAdminVoucher(id: number) {
 export interface AdminCategoryFilters {
   search?: string;
   page?: number;
+  per_page?: number;
 }
 
 export async function fetchAdminCategories(filters: AdminCategoryFilters = {}) {
@@ -245,12 +246,12 @@ export async function fetchAdminCategories(filters: AdminCategoryFilters = {}) {
   return res.data.data;
 }
 
-export async function createAdminCategory(input: { name: string; description?: string; order?: number; is_active?: boolean }) {
+export async function createAdminCategory(input: { name: string; description?: string; order?: number; is_active?: boolean; is_premium?: boolean; price?: number; icon?: string | null; duration_days?: number | null }) {
   const res = await api.post<ApiSuccess<Category>>('/admin/categories', input);
   return res.data.data;
 }
 
-export async function updateAdminCategory(id: number, input: { name?: string; description?: string; order?: number; is_active?: boolean }) {
+export async function updateAdminCategory(id: number, input: { name?: string; description?: string; order?: number; is_active?: boolean; is_premium?: boolean; price?: number; icon?: string | null; duration_days?: number | null }) {
   const res = await api.put<ApiSuccess<Category>>(`/admin/categories/${id}`, input);
   return res.data.data;
 }
@@ -319,26 +320,6 @@ export async function deleteAdminModule(id: number) {
 export async function toggleAdminModule(id: number) {
   const res = await api.post<ApiSuccess<AdminModuleItem>>(`/admin/modules/${id}/toggle-publish`);
   return res.data.data;
-}
-
-export async function fetchAdminModuleCategories() {
-  const res = await api.get<ApiSuccess<Array<{ id: number; name: string; slug: string }>>>('/admin/module-categories');
-  return res.data.data;
-}
-
-export async function createAdminModuleCategory(input: { name: string }) {
-  const res = await api.post<ApiSuccess<{ id: number; name: string; slug: string }>>('/admin/module-categories', input);
-  return res.data.data;
-}
-
-export async function updateAdminModuleCategory(id: number, input: { name: string }) {
-  const res = await api.put<ApiSuccess<{ id: number; name: string; slug: string }>>(`/admin/module-categories/${id}`, input);
-  return res.data.data;
-}
-
-export async function deleteAdminModuleCategory(id: number) {
-  const res = await api.delete<ApiSuccess<null>>(`/admin/module-categories/${id}`);
-  return res.data;
 }
 
 // ── Kotoba Categories ──────────────────────────────────────────────

@@ -32,6 +32,12 @@ export async function resetPassword(input: { token: string; email: string; passw
   return res.data;
 }
 
+export async function ssoLogin(token: string) {
+  await initCsrfCookie();
+  const res = await api.post<ApiSuccess<{ user: User; token: string }>>('/auth/sso-mendunia', { token });
+  return res.data.data;
+}
+
 export async function fetchMe() {
   const res = await api.get<ApiSuccess<User>>('/me');
   return res.data.data;

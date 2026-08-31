@@ -70,6 +70,10 @@ class PackageController extends Controller
     {
         $hasAccess = $this->accessService->canAccessPackage($user, $package);
 
+        // Expose effective premium + price (category-level when the category is premium)
+        $package->is_premium = $this->accessService->isPremiumPackage($package);
+        $package->price = $this->accessService->packagePrice($package);
+
         $completedAttempt = QuizAttempt::where('user_id', $user->id)
             ->where('package_id', $package->id)
             ->where('status', 'completed')

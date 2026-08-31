@@ -15,12 +15,17 @@ import {
   updateAdminCategory,
 } from '@/services/admin';
 import type { Category } from '@/types';
+import { CATEGORY_ICONS, getCategoryIcon } from '@/constants/categoryIcons';
 
 interface CategoryForm {
   name: string;
   description: string;
   order: number;
   is_active: boolean;
+  is_premium: boolean;
+  price: number;
+  duration_days: number | null;
+  icon: string;
 }
 
 const emptyForm: CategoryForm = {
@@ -28,6 +33,10 @@ const emptyForm: CategoryForm = {
   description: '',
   order: 0,
   is_active: true,
+  is_premium: false,
+  price: 0,
+  duration_days: null,
+  icon: '',
 };
 
 export default function AdminCategories() {
@@ -73,6 +82,10 @@ export default function AdminCategories() {
       description: cat.description ?? '',
       order: cat.order,
       is_active: cat.is_active,
+      is_premium: cat.is_premium ?? false,
+      price: cat.price ?? 0,
+      duration_days: cat.duration_days ?? null,
+      icon: cat.icon ?? '',
     });
     setModalOpen(true);
   }
@@ -153,9 +166,12 @@ export default function AdminCategories() {
                 <tr className="border-b border-gray-100 bg-gray-50 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                   <th className="px-5 py-3">#</th>
                   <th className="px-5 py-3">Nama</th>
+                  <th className="px-5 py-3">Ikon</th>
                   <th className="px-5 py-3">Slug</th>
                   <th className="px-5 py-3">Deskripsi</th>
                   <th className="px-5 py-3">Urutan</th>
+                  <th className="px-5 py-3">Tipe</th>
+                  <th className="px-5 py-3">Harga (Rp)</th>
                   <th className="px-5 py-3">Status</th>
                   <th className="px-5 py-3 text-right">Aksi</th>
                 </tr>
@@ -165,9 +181,34 @@ export default function AdminCategories() {
                   <tr key={cat.id} className="hover:bg-gray-50">
                     <td className="px-5 py-3 text-gray-500">{(page - 1) * 15 + i + 1}</td>
                     <td className="px-5 py-3 font-medium text-gray-900">{cat.name}</td>
+                    <td className="px-5 py-3">
+                      {(() => {
+                        const Icon = getCategoryIcon(cat.icon);
+                        return (
+                          <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-gray-100 text-gray-600">
+                            <Icon size={15} />
+                          </span>
+                        );
+                      })()}
+                    </td>
                     <td className="px-5 py-3 text-gray-500">{cat.slug}</td>
                     <td className="max-w-xs truncate px-5 py-3 text-gray-500">{cat.description ?? '-'}</td>
                     <td className="px-5 py-3 text-gray-500">{cat.order}</td>
+                    <td className="px-5 py-3">
+                      <Badge variant={cat.is_premium ? 'warning' : 'default'}>
+                        {cat.is_premium ? 'Premium (Berbayar)' : 'Gratis'}
+                      </Badge>
+                    </td>
+                    <td className="px-5 py-3 text-gray-700">
+                      {cat.is_premium
+                        ? (cat.price ?? 0).toLocaleString('id-ID')
+                        : '-'}
+                      {cat.is_premium && (
+                        <span className="block text-[11px] text-gray-400">
+                          {cat.duration_days ? `${cat.duration_days} hari` : 'selamanya'}
+                        </span>
+                      )}
+                    </td>
                     <td className="px-5 py-3">
                       <Badge variant={cat.is_active ? 'success' : 'warning'}>
                         {cat.is_active ? 'Aktif' : 'Nonaktif'}
@@ -246,6 +287,33 @@ export default function AdminCategories() {
             />
           </div>
           <div>
+            <label className="mb-1.5 block text-xs font-medium text-gray-700">Ikon</label>
+            <div className="grid grid-cols-6 gap-2">
+              {CATEGORY_ICONS.map((opt) => {
+                const Icon = opt.icon;
+                const active = form.icon === opt.name;
+                return (
+                  <button
+                    type="button"
+                    key={opt.name}
+                    title={opt.label}
+                    onClick={() => setForm({ ...form, icon: opt.name })}
+                    className={`flex flex-col items-center justify-center gap-1 rounded-md border px-1 py-2 transition-colors ${
+                      active
+                        ? 'border-brand-500 bg-brand-50 text-brand-600'
+                        : 'border-gray-200 text-gray-500 hover:border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    <Icon size={18} />
+                    <span className="max-w-full truncate text-[9px] font-medium">
+                      {opt.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div>
             <label className="mb-1.5 block text-xs font-medium text-gray-700">Deskripsi</label>
             <textarea
               className="w-full rounded-md border border-gray-200 px-3 py-2.5 text-sm text-gray-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
@@ -276,6 +344,64 @@ export default function AdminCategories() {
                 Aktif
               </label>
             </div>
+          </div>
+          <div>
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+              <input
+                type="checkbox"
+                checked={form.is_premium}
+                onChange={(e) => setForm({ ...form, is_premium: e.target.checked })}
+                className="h-4 w-4 rounded border-gray-300"
+              />
+              Premium (kategori berbayar — semua paket di dalamnya terkunci)
+            </label>
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-gray-700">
+              Harga (Rp)
+            </label>
+            <Input
+              type="number"
+              min={0}
+              value={String(form.price ?? 0)}
+              onChange={(e) => setForm({ ...form, price: Number(e.target.value) })}
+              placeholder="Contoh: 100000"
+              disabled={!form.is_premium}
+            />
+            {!form.is_premium && (
+              <p className="mt-1 text-xs text-gray-400">
+                Harga berlaku saat kategori ditandai Premium.
+              </p>
+            )}
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-gray-700">
+              Durasi Akses
+            </label>
+            <select
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-[#15a0f5] focus:ring-2 focus:ring-[#15a0f5]/20 disabled:bg-gray-100 disabled:text-gray-400"
+              value={form.duration_days === null ? '0' : String(form.duration_days)}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  duration_days: Number(e.target.value) === 0 ? null : Number(e.target.value),
+                })
+              }
+              disabled={!form.is_premium}
+            >
+              <option value="0">Selamanya (unlimited)</option>
+              <option value="7">7 hari</option>
+              <option value="14">14 hari</option>
+              <option value="30">30 hari</option>
+              <option value="60">60 hari</option>
+              <option value="90">90 hari</option>
+              <option value="365">1 tahun (365 hari)</option>
+            </select>
+            {!form.is_premium && (
+              <p className="mt-1 text-xs text-gray-400">
+                Pilih durasi saat kategori ditandai Premium.
+              </p>
+            )}
           </div>
           <div className="flex flex-col-reverse gap-2 border-t border-gray-100 pt-4 sm:flex-row sm:justify-end">
             <Button type="button" variant="ghost" onClick={() => setModalOpen(false)} className="w-full sm:w-auto">

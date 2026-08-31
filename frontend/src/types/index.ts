@@ -108,8 +108,18 @@ export interface LearningModule {
   price: number;
   status: 'draft' | 'published';
   category_id: number | null;
-  category?: { id: number; name: string } | null;
+  category?: {
+    id: number;
+    name: string;
+    slug?: string;
+    description?: string | null;
+    icon?: string | null;
+    is_premium?: boolean;
+    price?: number;
+    duration_days?: number | null;
+  } | null;
   published_at: string | null;
+  accessible?: boolean;
 }
 
 export interface ModulePurchase {
@@ -228,9 +238,14 @@ export interface Category {
   id: number;
   name: string;
   slug: string;
+  icon?: string | null;
   description: string | null;
   order: number;
   is_active: boolean;
+  is_premium?: boolean;
+  has_access?: boolean;
+  price?: number;
+  duration_days?: number | null;
   created_at: string | null;
   updated_at: string | null;
 }

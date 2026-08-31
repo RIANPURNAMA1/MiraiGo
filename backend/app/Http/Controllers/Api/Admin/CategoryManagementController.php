@@ -35,7 +35,15 @@ class CategoryManagementController extends Controller
             'description' => ['nullable', 'string'],
             'order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['boolean'],
+            'is_premium' => ['boolean'],
+            'price' => ['nullable', 'integer', 'min:0'],
+            'icon' => ['nullable', 'string', 'max:60'],
+            'duration_days' => ['nullable', 'integer', 'min:0'],
         ]);
+
+        if (empty($data['duration_days'])) {
+            $data['duration_days'] = null; // null = akses selamanya
+        }
 
         $data['slug'] = Str::slug($data['name']);
 
@@ -51,7 +59,15 @@ class CategoryManagementController extends Controller
             'description' => ['nullable', 'string'],
             'order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['boolean'],
+            'is_premium' => ['boolean'],
+            'price' => ['nullable', 'integer', 'min:0'],
+            'icon' => ['nullable', 'string', 'max:60'],
+            'duration_days' => ['nullable', 'integer', 'min:0'],
         ]);
+
+        if (empty($data['duration_days'])) {
+            $data['duration_days'] = null; // null = akses selamanya
+        }
 
         if (isset($data['name'])) {
             $data['slug'] = Str::slug($data['name']);

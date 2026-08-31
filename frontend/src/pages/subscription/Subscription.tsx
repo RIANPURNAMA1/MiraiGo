@@ -1,15 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { LoadingState } from '@/components/ui/LoadingState';
 
 import { fetchSubscription } from '@/services/subscription';
-import { fetchPackages } from '@/services/packages';
+import { fetchPackages, fetchCategories } from '@/services/packages';
 
-import type { Package, SubscriptionData } from '@/types';
+import type { Category, Package, SubscriptionData } from '@/types';
 
 import {
   CheckCircle2,
@@ -18,6 +19,12 @@ import {
   ArrowRight,
   ShieldCheck,
   Lock,
+  BookOpen,
+  Infinity as InfinityIcon,
+  Sparkles,
+  RefreshCw,
+  Headset,
+  X,
 } from 'lucide-react';
 
 function formatCurrency(amount: number) {
@@ -52,17 +59,22 @@ function daysUntil(value: string | null) {
 export default function Subscription() {
   const [sub, setSub] = useState<SubscriptionData | null>(null);
   const [packages, setPackages] = useState<Package[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedCat, setSelectedCat] = useState<Category | null>(null);
   const premiumRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     Promise.all([
       fetchSubscription(),
       fetchPackages(),
+      fetchCategories(),
     ])
-      .then(([subData, pkgRes]) => {
+      .then(([subData, pkgRes, catData]) => {
         setSub(subData);
         setPackages(Array.isArray(pkgRes.items) ? pkgRes.items : []);
+        setCategories(Array.isArray(catData) ? catData : []);
       })
       .finally(() => {
         setIsLoading(false);
@@ -76,6 +88,11 @@ export default function Subscription() {
   const premiumPkgs = packages.filter(
     (p) => p.is_premium && p.status === 'published'
   );
+
+  const premiumCategories = categories.filter((c) => c.is_premium);
+
+  const getCategoryPackages = (cat: Category) =>
+    premiumPkgs.filter((p) => p.category === cat.slug);
 
   const activeAccesses =
     sub?.accesses.filter((a) => a.status === 'active') ?? [];
@@ -314,11 +331,11 @@ export default function Subscription() {
     </div>
 
     <p className="mt-1 text-sm text-gray-500">
-      Pilih paket yang sesuai dengan kebutuhan belajar Anda.
+      Pilih kategori yang sesuai dengan kebutuhan belajar Anda.
     </p>
   </div>
 
-  {premiumPkgs.length === 0 ? (
+  {premiumCategories.length === 0 ? (
     <div className="rounded-xl border border-gray-200 bg-white px-6 py-12 text-center">
       <Lock
         size={22}
@@ -326,28 +343,31 @@ export default function Subscription() {
       />
 
       <p className="text-sm font-medium text-gray-700">
-        Belum ada paket premium
+        Belum ada kategori premium
       </p>
 
       <p className="mt-1 text-xs text-gray-400">
-        Paket premium belum tersedia saat ini.
+        Kategori premium belum tersedia saat ini.
       </p>
     </div>
   ) : (
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
-      {premiumPkgs.map((pkg) => {
-        const owned = sub?.accesses.some(
-          (a) =>
-            a.package === pkg.name &&
-            a.status === 'active'
-        );
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      {premiumCategories.map((cat) => {
+        const catPkgs = getCategoryPackages(cat);
 
         return (
-          <PackageCard
-            key={pkg.id}
-            pkg={pkg}
-            premium
-            owned={!!owned}
+          <CategoryCard
+            key={cat.slug}
+            cat={cat}
+            packages={catPkgs}
+            owned={
+              catPkgs.some((p) =>
+                sub?.accesses.some(
+                  (a) => a.package === p.name && a.status === 'active'
+                )
+              )
+            }
+            onSelect={() => setSelectedCat(cat)}
           />
         );
       })}
@@ -386,94 +406,197 @@ export default function Subscription() {
           </Link>
         </div>
       </section>
+
+      {/* =====================================================
+          BENEFITS POPUP
+      ====================================================== */}
+
+      {selectedCat &&
+        createPortal(
+          <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/70"
+            onClick={() => setSelectedCat(null)}
+          />
+          <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <button
+              onClick={() => setSelectedCat(null)}
+              className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition hover:bg-gray-200"
+            >
+              <X size={16} />
+            </button>
+
+            {/* Header */}
+            <div className="flex items-center gap-3 pr-8">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
+                <Sparkles size={22} />
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-gray-900">
+                  Buka akses penuh {selectedCat.name}
+                </h3>
+                <p className="text-xs text-gray-500">
+                  1x bayar, semua paket {selectedCat.name} langsung terbuka.
+                </p>
+              </div>
+            </div>
+
+            {/* Price */}
+            <div className="mt-4 flex items-baseline gap-1 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+              <span className="text-lg font-bold tracking-tight text-gray-900">
+                {formatCurrency(selectedCat.price ?? 0)}
+              </span>
+              <span className="text-xs text-gray-400">
+                {selectedCat.duration_days ? `/ ${selectedCat.duration_days} hari` : '/ selamanya'}
+              </span>
+            </div>
+
+            {/* Benefits */}
+            <ul className="mt-4 space-y-3">
+              {[
+                {
+                  icon: InfinityIcon,
+                  title: 'Akses unlimited',
+                  desc: 'Semua paket soal terbuka tanpa batasan, belajar sepuasnya.',
+                },
+                {
+                  icon: Lock,
+                  title: 'Akses selamanya',
+                  desc: 'Bayar sekali, pakai selamanya. Tanpa biaya bulanan.',
+                },
+                {
+                  icon: RefreshCw,
+                  title: 'Update gratis',
+                  desc: 'Paket soal baru otomatis terbuka tanpa biaya tambahan.',
+                },
+                {
+                  icon: Headset,
+                  title: 'Priority utama',
+                  desc: 'Dukungan prioritas untuk member premium.',
+                },
+              ].map((b) => {
+                const BIcon = b.icon;
+                return (
+                  <li key={b.title} className="flex items-start gap-3">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
+                      <BIcon size={16} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">
+                        {b.title}
+                      </p>
+                      <p className="text-xs leading-5 text-gray-500">
+                        {b.desc}
+                      </p>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+
+            {/* Actions */}
+            <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:items-center">
+              <button
+                onClick={() => setSelectedCat(null)}
+                className="flex-1 rounded-lg bg-gray-100 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-200"
+              >
+                Batal
+              </button>
+              <button
+                onClick={() => {
+                  const pkg = getCategoryPackages(selectedCat)[0];
+                  if (pkg) navigate(`/payment/${pkg.id}`);
+                }}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-md bg-gradient-to-br from-[#025dd2] to-[#15a0f5] py-2.5 text-sm font-semibold text-white transition hover:from-[#0150b8] hover:to-[#0f96e0] shadow-soft"
+              >
+                Lanjut Bayar
+                <ArrowRight size={15} />
+              </button>
+            </div>
+          </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
 
 /* =========================================================
-   PACKAGE CARD
+   CATEGORY CARD
 ========================================================= */
-function PackageCard({
-  pkg,
-  premium = false,
+function CategoryCard({
+  cat,
+  packages,
   owned,
+  onSelect,
 }: {
-  pkg: Package;
-  premium?: boolean;
+  cat: Category;
+  packages: Package[];
   owned: boolean;
+  onSelect: () => void;
 }) {
+  const price = cat.price ?? 0;
+  const firstPkgId = packages[0]?.id;
+
   return (
     <div
-      className={`group flex flex-col rounded-xl border bg-white p-4 transition-all duration-200 ${
+      className={`group flex h-full flex-col rounded-xl border bg-white p-5 transition-all duration-200 ${
         owned
           ? 'border-gray-200'
-          : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
+          : 'border-gray-200 hover:border-amber-300 hover:shadow-md'
       }`}
     >
       {/* Header */}
       <div className="flex items-start justify-between gap-2">
-        <div className="flex min-w-0 items-center gap-2">
-          <div
-            className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
-              premium
-                ? 'bg-amber-50 text-amber-500'
-                : 'bg-gray-50 text-gray-500'
-            }`}
-          >
-            {premium ? (
-              <Lock size={13} />
-            ) : (
-              <ShieldCheck size={13} />
-            )}
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
+            <BookOpen size={18} />
           </div>
 
           <div className="min-w-0">
-            <h4 className="truncate text-sm font-semibold text-gray-900">
-              {pkg.name}
+            <h4 className="break-words text-sm font-semibold text-gray-900">
+              {cat.name}
             </h4>
 
-            {pkg.level && (
-              <span className="mt-0.5 block text-[11px] text-gray-400">
-                Level {pkg.level}
-              </span>
-            )}
+            <span className="mt-0.5 block text-[11px] text-gray-400">
+              {packages.length} paket latihan
+            </span>
           </div>
         </div>
 
-        {/* Status */}
         {owned ? (
-          <span className="shrink-0 text-xs font-medium text-emerald-600">
+          <span className="shrink-0 rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-600">
             Aktif
           </span>
-        ) : premium ? (
+        ) : (
           <span className="shrink-0 rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-600">
             Premium
           </span>
-        ) : null}
+        )}
       </div>
 
       {/* Description */}
-      {pkg.description && (
-        <p className="mt-2.5 line-clamp-2 text-xs leading-5 text-gray-500">
-          {pkg.description}
+      {cat.description && (
+        <p className="mt-3 line-clamp-2 text-xs leading-5 text-gray-500">
+          {cat.description}
         </p>
       )}
 
       {/* Price */}
-      <div className="mt-3 border-t border-gray-100 pt-3">
+      <div className="mt-4 border-t border-gray-100 pt-3">
         <div className="flex items-baseline gap-1">
           <span className="text-lg font-bold tracking-tight text-gray-900">
-            {formatCurrency(pkg.price)}
+            {formatCurrency(price)}
           </span>
 
           <span className="text-[11px] text-gray-400">
-            / 30 hari
+            {cat.duration_days ? `/ ${cat.duration_days} hari` : 'selamanya'}
           </span>
         </div>
       </div>
 
       {/* Action */}
-      <div className="mt-3">
+      <div className="mt-4">
         {owned ? (
           <Button
             className="w-full"
@@ -484,13 +607,15 @@ function PackageCard({
             <CheckCircle2 size={14} />
             Sudah Aktif
           </Button>
+        ) : firstPkgId ? (
+          <Button className="w-full" size="sm" onClick={onSelect}>
+            Pilih Paket
+            <ArrowRight size={14} />
+          </Button>
         ) : (
-          <Link to={`/payment/${pkg.id}`} className="block">
-            <Button className="w-full" size="sm">
-              Pilih Paket
-              <ArrowRight size={14} />
-            </Button>
-          </Link>
+          <Button className="w-full" size="sm" disabled>
+            Segera Hadir
+          </Button>
         )}
       </div>
     </div>

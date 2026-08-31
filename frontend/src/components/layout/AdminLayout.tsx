@@ -18,9 +18,7 @@ const groups: NavGroupData[] = [
   {
     label: 'Konten Modul',
     items: [
-      { to: '/admin/module-categories', label: 'Kategori Modul', icon: 'tag' },
       { to: '/admin/modules', label: 'Modul', icon: 'book' },
-      { to: '/admin/module-premium', label: 'Akses Modul Premium', icon: 'star' },
     ],
   },
   {

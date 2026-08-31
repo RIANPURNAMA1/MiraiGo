@@ -130,12 +130,13 @@ class PaymentApprovalController extends Controller
             'admin_notes' => $data['admin_notes'] ?? null,
         ]);
 
-        // Grant access for each package in the transaction
+        // Grant access. A payment for a package unlocks the whole category.
+        // Expiry follows the category's duration (null = selamanya).
         $accessService = new AccessService();
         foreach ($transaction->items as $item) {
             $package = $item->package;
-            $expiresAt = now()->addDays(30); // 30 days access
-            $accessService->grantAccess($user, $package, $expiresAt);
+            $expiresAt = $accessService->categoryExpiry($package);
+            $accessService->grantCategoryAccess($user, $package, $expiresAt);
         }
 
         return $this->success([], 'Pembayaran disetujui. Akses paket telah diberikan.');

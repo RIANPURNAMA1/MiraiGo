@@ -5,9 +5,10 @@ import { Alert } from '@/components/ui/Alert';
 import { LoadingState } from '@/components/ui/LoadingState';
 import { WhatsAppButton } from '@/components/ui/WhatsAppButton';
 import { fetchPackage } from '@/services/packages';
+import { fetchCategories } from '@/services/packages';
 import { createManualPayment, validateVoucher } from '@/services/manualPayment';
 import { getErrorMessage } from '@/services/api';
-import type { Package } from '@/types';
+import type { Category, Package } from '@/types';
 import type { VoucherData } from '@/services/manualPayment';
 
 function formatCurrency(amount: number) {
@@ -18,6 +19,7 @@ export default function Payment() {
   const { packageId } = useParams();
   const navigate = useNavigate();
   const [pkg, setPkg] = useState<Package | null>(null);
+  const [category, setCategory] = useState<Category | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [proofFile, setProofFile] = useState<File | null>(null);
@@ -37,10 +39,11 @@ export default function Payment() {
 
   useEffect(() => {
     if (!packageId) return;
-    fetchPackage(Number(packageId))
-      .then((p) => {
+    Promise.all([fetchPackage(Number(packageId)), fetchCategories().catch(() => [])])
+      .then(([p, cats]) => {
         setPkg(p);
         setFinalTotal(p.price);
+        setCategory(cats.find((c) => c.slug === p.category) ?? null);
         if (!p.is_premium) navigate('/latihan-soal', { replace: true });
       })
       .catch(() => setError('Paket tidak ditemukan.'))
@@ -321,26 +324,39 @@ export default function Payment() {
                 <h2 className="mb-4 text-sm font-semibold text-gray-700 uppercase tracking-wide">Ringkasan Pesanan</h2>
 
                 {/* Package card */}
-                <div className="flex gap-3 rounded-xl bg-gray-50 p-3">
-                  {pkg.thumbnail ? (
-                    <img src={pkg.thumbnail} alt={pkg.name} className="h-16 w-16 rounded-lg object-cover" />
-                  ) : (
-                    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#025dd2] to-[#15a0f5]">
-                      <span className="text-lg font-bold text-white/30">JFT</span>
+                <div className="rounded-xl bg-gray-50 p-3">
+                  <div className="flex gap-3">
+                    {pkg.thumbnail ? (
+                      <img src={pkg.thumbnail} alt={pkg.name} className="h-16 w-16 rounded-lg object-cover" />
+                    ) : (
+                      <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#025dd2] to-[#15a0f5]">
+                        <span className="text-lg font-bold text-white/30">JFT</span>
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="font-semibold text-gray-900">Buka Akses Penuh {pkg.category?.replace('-', ' ') || 'Kategori'}</p>
+                      <p className="text-xs text-gray-500">Semua paket latihan dalam kategori ini</p>
+                      <p className="mt-1 text-xs text-gray-500">Akses selamanya</p>
                     </div>
-                  )}
-                  <div className="min-w-0">
-                    <p className="font-semibold text-gray-900">{pkg.name}</p>
-                    <p className="text-xs text-gray-500">{pkg.category} · {pkg.level}</p>
-                    <p className="mt-1 text-xs text-gray-500">{pkg.duration_minutes} menit · {pkg.total_questions ?? 0} soal</p>
                   </div>
+                  <ul className="mt-3 space-y-1.5 border-t border-gray-200 pt-3 text-xs text-gray-600">
+                    {(category?.features && category.features.length > 0
+                      ? category.features
+                      : ['Akses paket latihan', 'Pembahasan lengkap', 'Update soal berkala', 'Dukungan belajar']
+                    ).map((feature) => (
+                      <li key={feature} className="flex items-center gap-2">
+                        <svg className="h-3.5 w-3.5 text-emerald-500" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
 
                 {/* Price breakdown */}
                 <div className="mt-4 space-y-2 border-t border-gray-100 pt-4 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Harga paket</span>
-                    <span className="text-gray-900">{formatCurrency(pkg.price)}</span>
+                    <span className="text-gray-500">Harga akses kategori</span>
+                    <span className="text-gray-900">{formatCurrency(finalTotal || pkg.price)}</span>
                   </div>
                   {voucher && (
                     <div className="flex justify-between">

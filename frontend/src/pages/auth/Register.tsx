@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
+import { useToast } from '@/components/ui/Toast';
 import { register as registerApi } from '@/services/auth';
 import { getErrorMessage } from '@/services/api';
 
@@ -39,6 +40,7 @@ export default function Register() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   const requirements = usePasswordRequirements(password);
   const passwordValid = requirements.every((r) => r.valid);
@@ -111,7 +113,8 @@ export default function Register() {
       });
       localStorage.setItem('ssw_token', data.token);
       localStorage.setItem('ssw_user', JSON.stringify(data.user));
-      navigate('/dashboard');
+      showToast('Akun berhasil dibuat. Silakan masuk.', 'success');
+      navigate('/login');
     } catch (err) {
       setError(getErrorMessage(err, 'Gagal mendaftar.'));
     } finally {

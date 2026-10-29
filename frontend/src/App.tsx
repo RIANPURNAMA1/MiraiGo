@@ -21,12 +21,14 @@ import KotobaCategoryDetail from '@/pages/practice/KotobaCategoryDetail';
 import KotobaQuiz from '@/pages/practice/KotobaQuiz';
 import Reservasi from '@/pages/reservasi/Reservasi';
 import AksesModul from '@/pages/modul/AksesModul';
-import Quiz from '@/pages/quiz/Quiz';
+import Quiz, { ExamInstructions } from '@/pages/quiz/Quiz';
 import Result from '@/pages/result/Result';
 import Review from '@/pages/result/Review';
 import History from '@/pages/history/History';
 import Progress from '@/pages/progress/Progress';
 import Modules from '@/pages/modules/Modules';
+import LearningPath from '@/pages/learning/LearningPath';
+import LearningDetail from '@/pages/learning/LearningDetail';
 import Subscription from '@/pages/subscription/Subscription';
 import Payments from '@/pages/payments/Payments';
 import Profile from '@/pages/profile/Profile';
@@ -83,6 +85,14 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/simulasi/:id"
+        element={
+          <ProtectedRoute>
+            <ExamInstructions />
+          </ProtectedRoute>
+        }
+      />
 
       <Route
         element={
@@ -106,6 +116,8 @@ function AppRoutes() {
         <Route path="/history" element={<History />} />
         <Route path="/progress" element={<Progress />} />
         <Route path="/modules" element={<Modules />} />
+        <Route path="/learning" element={<LearningPath />} />
+        <Route path="/learning/:levelId" element={<LearningDetail />} />
         <Route path="/subscription" element={<Subscription />} />
         <Route path="/payments" element={<Payments />} />
         <Route path="/profile" element={<Profile />} />
@@ -151,6 +163,7 @@ function AppRoutes() {
         <Route path="/admin/settings" element={<AdminSettings />} />
       </Route>
 
+      <Route path="/" element={<Landing />} />
       <Route path="*" element={<HomeRedirect />} />
     </Routes>
   );

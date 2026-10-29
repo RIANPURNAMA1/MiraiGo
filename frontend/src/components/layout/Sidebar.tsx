@@ -8,10 +8,11 @@ interface NavGroupData { label: string; items: NavItemData[]; }
 
 const groups: NavGroupData[] = [
   {
-    label: 'Latihan',
+    label: 'Pembelajaran',
     items: [
-      { to: '/latihan-soal', label: 'Tes Soal', icon: 'list' },
+      { to: '/latihan-soal', label: 'Mulai Simulasi JFT', icon: 'list' },
       { to: '/latihan-kotoba', label: 'Latihan Kotoba', icon: 'kotoba' },
+      { to: '/learning', label: 'Learning', icon: 'book' },
     ],
   },
   {
@@ -27,13 +28,12 @@ const groups: NavGroupData[] = [
       { to: '/history', label: 'Riwayat Tes', icon: 'clock' },
       { to: '/subscription', label: 'Upgrade Aksess', icon: 'crown' },
       { to: '/payments', label: 'Pembayaran', icon: 'card' },
+      { to: '/profile', label: 'Pengaturan', icon: 'gear' },
     ],
   },
 ];
 
-const bottomNav: NavItemData[] = [
-  { to: '/profile', label: 'Pengaturan', icon: 'gear' },
-];
+const bottomNav: NavItemData[] = [];
 
 function Icon({ name, size = 18 }: { name: string; size?: number }) {
   if (name === 'crown') return <Crown size={size} />;
@@ -175,18 +175,22 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: { co
             <NavGroup key={group.label} group={group} collapsed={collapsed && !mobileOpen} defaultOpen onNavClick={onMobileClose} />
           ))}
 
-          <div className="border-t border-gray-100" />
+          {bottomNav.length > 0 && (
+            <>
+              <div className="border-t border-gray-100" />
 
-          <div className="space-y-0.5">
-            {!collapsed && (
-              <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-                Akun
-              </p>
-            )}
-            {bottomNav.map((item) => (
-              <NavItem key={item.to} item={item} collapsed={collapsed && !mobileOpen} onClick={onMobileClose} />
-            ))}
-          </div>
+              <div className="space-y-0.5">
+                {!collapsed && (
+                  <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                    Akun
+                  </p>
+                )}
+                {bottomNav.map((item) => (
+                  <NavItem key={item.to} item={item} collapsed={collapsed && !mobileOpen} onClick={onMobileClose} />
+                ))}
+              </div>
+            </>
+          )}
 
           <div className="pt-1">
             <button

@@ -246,12 +246,12 @@ export async function fetchAdminCategories(filters: AdminCategoryFilters = {}) {
   return res.data.data;
 }
 
-export async function createAdminCategory(input: { name: string; description?: string; order?: number; is_active?: boolean; is_premium?: boolean; price?: number; icon?: string | null; duration_days?: number | null }) {
+export async function createAdminCategory(input: { name: string; description?: string; features?: string[] | null; is_active?: boolean; is_premium?: boolean; is_popular?: boolean; price?: number; icon?: string | null; duration_days?: number | null }) {
   const res = await api.post<ApiSuccess<Category>>('/admin/categories', input);
   return res.data.data;
 }
 
-export async function updateAdminCategory(id: number, input: { name?: string; description?: string; order?: number; is_active?: boolean; is_premium?: boolean; price?: number; icon?: string | null; duration_days?: number | null }) {
+export async function updateAdminCategory(id: number, input: { name?: string; description?: string; features?: string[] | null; is_active?: boolean; is_premium?: boolean; is_popular?: boolean; price?: number; icon?: string | null; duration_days?: number | null }) {
   const res = await api.put<ApiSuccess<Category>>(`/admin/categories/${id}`, input);
   return res.data.data;
 }

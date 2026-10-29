@@ -34,25 +34,35 @@ class DashboardController extends Controller
             ->where(function ($q) {
                 $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
             })
+            ->with('package')
             ->get();
 
         if ($active->isEmpty()) {
-            return ['is_active' => false, 'label' => 'Belum aktif', 'days_left' => 0, 'expires_at' => null];
+            return ['is_active' => false, 'items' => []];
         }
 
-        if ($active->contains(fn ($a) => $a->expires_at === null)) {
-            return ['is_active' => true, 'label' => 'Selamanya', 'days_left' => null, 'expires_at' => null];
-        }
+        $items = $active->map(function ($a) {
+            $package = $a->package;
+            if ($a->expires_at === null) {
+                return [
+                    'package_name' => $package?->name ?? 'Paket',
+                    'category' => $package?->category ?? null,
+                    'label' => 'Selamanya',
+                    'days_left' => null,
+                    'expires_at' => null,
+                ];
+            }
+            $daysLeft = (int) ceil(now()->diffInDays(Carbon::parse($a->expires_at)));
+            return [
+                'package_name' => $package?->name ?? 'Paket',
+                'category' => $package?->category ?? null,
+                'label' => 'Aktif',
+                'days_left' => max($daysLeft, 1),
+                'expires_at' => $a->expires_at?->toIso8601String(),
+            ];
+        })->all();
 
-        $furthest = $active->max('expires_at');
-        $daysLeft = (int) ceil(now()->diffInDays(Carbon::parse($furthest)));
-
-        return [
-            'is_active' => true,
-            'label' => 'Aktif',
-            'days_left' => max($daysLeft, 1),
-            'expires_at' => $furthest?->toIso8601String(),
-        ];
+        return ['is_active' => true, 'items' => $items];
     }
 
     private function referral(User $user): array

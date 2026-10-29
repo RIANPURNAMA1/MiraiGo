@@ -36,13 +36,27 @@ class CategoryManagementController extends Controller
             'order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['boolean'],
             'is_premium' => ['boolean'],
+            'is_popular' => ['boolean'],
             'price' => ['nullable', 'integer', 'min:0'],
             'icon' => ['nullable', 'string', 'max:60'],
+            'features' => ['nullable', 'array'],
+            'features.*' => ['string', 'max:255'],
             'duration_days' => ['nullable', 'integer', 'min:0'],
         ]);
 
         if (empty($data['duration_days'])) {
             $data['duration_days'] = null; // null = akses selamanya
+        }
+
+        if (array_key_exists('features', $data)) {
+            $data['features'] = array_values(array_filter(
+                array_map(fn ($f) => trim((string) $f), (array) $data['features']),
+                fn ($f) => $f !== ''
+            ));
+
+            if ($data['features'] === []) {
+                $data['features'] = null;
+            }
         }
 
         $data['slug'] = Str::slug($data['name']);
@@ -60,13 +74,27 @@ class CategoryManagementController extends Controller
             'order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['boolean'],
             'is_premium' => ['boolean'],
+            'is_popular' => ['boolean'],
             'price' => ['nullable', 'integer', 'min:0'],
             'icon' => ['nullable', 'string', 'max:60'],
+            'features' => ['nullable', 'array'],
+            'features.*' => ['string', 'max:255'],
             'duration_days' => ['nullable', 'integer', 'min:0'],
         ]);
 
         if (empty($data['duration_days'])) {
             $data['duration_days'] = null; // null = akses selamanya
+        }
+
+        if (array_key_exists('features', $data)) {
+            $data['features'] = array_values(array_filter(
+                array_map(fn ($f) => trim((string) $f), (array) $data['features']),
+                fn ($f) => $f !== ''
+            ));
+
+            if ($data['features'] === []) {
+                $data['features'] = null;
+            }
         }
 
         if (isset($data['name'])) {

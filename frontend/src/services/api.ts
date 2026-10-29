@@ -9,16 +9,22 @@ export const api = axios.create({
     Accept: 'application/json',
   },
   withCredentials: true,
+  xsrfCookieName: 'XSRF-TOKEN',
+  xsrfHeaderName: 'X-XSRF-TOKEN',
 });
 
 export async function initCsrfCookie(): Promise<void> {
   await axios.get(`${ROOT_URL}/sanctum/csrf-cookie`, { withCredentials: true });
 }
 
-api.interceptors.request.use((config) => {
+api.interceptors.request.use(async (config) => {
   const token = localStorage.getItem('ssw_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+  }
+  const safeMethods = ['GET', 'HEAD', 'OPTIONS'];
+  if (!safeMethods.includes((config.method ?? 'GET').toUpperCase())) {
+    await initCsrfCookie();
   }
   return config;
 });

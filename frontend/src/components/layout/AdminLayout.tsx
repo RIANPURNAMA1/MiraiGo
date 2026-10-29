@@ -10,7 +10,7 @@ const groups: NavGroupData[] = [
   {
     label: 'Konten Soal',
     items: [
-      { to: '/admin/categories', label: 'Kategori Soal', icon: 'tag' },
+      { to: '/admin/categories', label: 'Kategori Paket', icon: 'tag' },
       { to: '/admin/packages', label: 'Paket', icon: 'package' },
       { to: '/admin/questions', label: 'Soal', icon: 'list' },
     ],

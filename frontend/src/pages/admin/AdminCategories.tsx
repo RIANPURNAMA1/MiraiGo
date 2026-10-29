@@ -20,9 +20,10 @@ import { CATEGORY_ICONS, getCategoryIcon } from '@/constants/categoryIcons';
 interface CategoryForm {
   name: string;
   description: string;
-  order: number;
+  features: string[];
   is_active: boolean;
   is_premium: boolean;
+  is_popular: boolean;
   price: number;
   duration_days: number | null;
   icon: string;
@@ -31,9 +32,10 @@ interface CategoryForm {
 const emptyForm: CategoryForm = {
   name: '',
   description: '',
-  order: 0,
+  features: [],
   is_active: true,
   is_premium: false,
+  is_popular: false,
   price: 0,
   duration_days: null,
   icon: '',
@@ -80,9 +82,10 @@ export default function AdminCategories() {
     setForm({
       name: cat.name,
       description: cat.description ?? '',
-      order: cat.order,
+      features: [...(cat.features ?? [])],
       is_active: cat.is_active,
       is_premium: cat.is_premium ?? false,
+      is_popular: cat.is_popular ?? false,
       price: cat.price ?? 0,
       duration_days: cat.duration_days ?? null,
       icon: cat.icon ?? '',
@@ -195,9 +198,14 @@ export default function AdminCategories() {
                     <td className="max-w-xs truncate px-5 py-3 text-gray-500">{cat.description ?? '-'}</td>
                     <td className="px-5 py-3 text-gray-500">{cat.order}</td>
                     <td className="px-5 py-3">
-                      <Badge variant={cat.is_premium ? 'warning' : 'default'}>
-                        {cat.is_premium ? 'Premium (Berbayar)' : 'Gratis'}
-                      </Badge>
+                      <div className="flex flex-col items-start gap-1">
+                        <Badge variant={cat.is_premium ? 'warning' : 'default'}>
+                          {cat.is_premium ? 'Premium (Berbayar)' : 'Gratis'}
+                        </Badge>
+                        {cat.is_popular && (
+                          <Badge variant="success">Paling Populer</Badge>
+                        )}
+                      </div>
                     </td>
                     <td className="px-5 py-3 text-gray-700">
                       {cat.is_premium
@@ -314,7 +322,9 @@ export default function AdminCategories() {
             </div>
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-gray-700">Deskripsi</label>
+            <label className="mb-1.5 block text-xs font-medium text-gray-700">
+              Deskripsi
+            </label>
             <textarea
               className="w-full rounded-md border border-gray-200 px-3 py-2.5 text-sm text-gray-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
               rows={3}
@@ -323,27 +333,60 @@ export default function AdminCategories() {
               placeholder="Deskripsi singkat kategori..."
             />
           </div>
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <label className="mb-1.5 block text-xs font-medium text-gray-700">Urutan</label>
-              <Input
-                type="number"
-                min={0}
-                value={form.order}
-                onChange={(e) => setForm({ ...form, order: Number(e.target.value) })}
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-gray-700">
+              Fitur Paket (untuk halaman harga)
+            </label>
+            <p className="mb-2 text-xs text-gray-400">
+              Tampil sebagai poin keunggulan di halaman subscription & pembayaran.
+            </p>
+            <div className="space-y-2">
+              {form.features.map((feature, idx) => (
+                <div key={idx} className="flex gap-2">
+                  <Input
+                    value={feature}
+                    onChange={(e) => {
+                      const features = [...form.features];
+                      features[idx] = e.target.value;
+                      setForm({ ...form, features });
+                    }}
+                    placeholder="Contoh: Pembahasan lengkap"
+                    className="flex-1"
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setForm({
+                        ...form,
+                        features: form.features.filter((_, i) => i !== idx),
+                      })
+                    }
+                    className="shrink-0 rounded-md px-2.5 text-sm font-medium text-red-600 hover:bg-red-50"
+                    title="Hapus fitur"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => setForm({ ...form, features: [...form.features, ''] })}
+              className="mt-2 text-xs font-medium text-brand-600 hover:text-brand-700"
+            >
+              + Tambah fitur
+            </button>
+          </div>
+          <div>
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+              <input
+                type="checkbox"
+                checked={form.is_active}
+                onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
+                className="h-4 w-4 rounded border-gray-300"
               />
-            </div>
-            <div className="flex items-end">
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={form.is_active}
-                  onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
-                  className="h-4 w-4 rounded border-gray-300"
-                />
-                Aktif
-              </label>
-            </div>
+              Aktif
+            </label>
           </div>
           <div>
             <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
@@ -354,6 +397,17 @@ export default function AdminCategories() {
                 className="h-4 w-4 rounded border-gray-300"
               />
               Premium (kategori berbayar — semua paket di dalamnya terkunci)
+            </label>
+          </div>
+          <div>
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+              <input
+                type="checkbox"
+                checked={form.is_popular}
+                onChange={(e) => setForm({ ...form, is_popular: e.target.checked })}
+                className="h-4 w-4 rounded border-gray-300"
+              />
+              Tandai Paling Populer (tampil di halaman harga)
             </label>
           </div>
           <div>

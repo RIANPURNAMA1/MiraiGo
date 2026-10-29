@@ -77,6 +77,42 @@ export interface QuizAttempt {
   unanswered: number;
 }
 
+export interface AttemptQuestionOption {
+  id: number;
+  label: string;
+  body: string;
+}
+
+export interface AttemptQuestion {
+  id: number;
+  position: number;
+  category: string | null;
+  body: string;
+  options: AttemptQuestionOption[];
+}
+
+export interface Simulation {
+  id: number;
+  title: string;
+  description: string | null;
+  duration_minutes: number;
+  question_count: number;
+}
+
+export interface AttemptPayload {
+  id: number;
+  status: string;
+  server_time: string;
+  deadline_at: string;
+  questions: AttemptQuestion[];
+  answers: Record<string, { option_id: number | null; flagged: boolean }>;
+  simulation: Simulation;
+  package?: {
+    sections: Array<{ id: number; name: string; questions: AttemptQuestion[] }>;
+  };
+  isExpired(): boolean;
+}
+
 export interface QuizReviewItem {
   question_id: number;
   question_text: string;
@@ -135,9 +171,13 @@ export interface DashboardData {
   user: { name: string };
   masa_berlaku: {
     is_active: boolean;
-    label: string;
-    days_left: number | null;
-    expires_at: string | null;
+  items: Array<{
+      package_name: string;
+      category: string | null;
+      label: string;
+      days_left: number | null;
+      expires_at: string | null;
+  }>;
   };
   referral: {
     code: string;
@@ -240,9 +280,11 @@ export interface Category {
   slug: string;
   icon?: string | null;
   description: string | null;
+  features?: string[] | null;
   order: number;
   is_active: boolean;
   is_premium?: boolean;
+  is_popular?: boolean;
   has_access?: boolean;
   price?: number;
   duration_days?: number | null;

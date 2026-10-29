@@ -10,6 +10,8 @@ import { fetchAttempt, saveAnswer, submitAttempt } from '@/services/attempts';
 import { getErrorMessage, ROOT_URL } from '@/services/api';
 import type { Question, QuizAttempt } from '@/types';
 
+export { ExamInstructions } from './QuizInstructions';
+
 export default function Quiz() {
   const { attemptId } = useParams();
   const navigate = useNavigate();
@@ -177,65 +179,48 @@ export default function Quiz() {
   const testTitle = (attempt as unknown as { test_name?: string }).test_name ?? 'Evaluation Test';
 
   return (
-    <div className="flex h-screen flex-col font-sans bg-[#edf1f5]">
-      {/* ── Top Header (Dark) ── */}
-      <div className="relative bg-[#1f2022] px-4 py-2 md:px-6">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex flex-col leading-tight">
-            <p className="text-[13px] text-white">
-              <span className="text-gray-300 font-normal">Question: </span>
-              <span className="font-bold">{sectionLocalIndex + 1}</span>
-            </p>
-            <p className="text-[13px] text-gray-300 font-normal mt-1">Section:</p>
-            <p className="max-w-[160px] truncate text-[13px] text-white font-semibold">
-              {currentSectionName}
-            </p>
-          </div>
-
-          <button
-            onClick={handleFinishSection}
-            className="shrink-0 rounded bg-[#f0c885] px-3 py-1.5 text-xs font-bold text-gray-900 transition-colors hover:bg-[#e0b875] sm:px-4 sm:text-sm"
-          >
-            Finish Section
-          </button>
-        </div>
-
-        {/* Timer */}
-        <div className="mt-2 flex items-center justify-center gap-2 sm:absolute sm:left-1/2 sm:top-1/2 sm:mt-0 sm:-translate-x-1/2 sm:-translate-y-1/2">
-          <svg
-            className="h-6 w-6 text-white"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="12" cy="12" r="10" />
-            <polyline points="12 6 12 12 16 14" />
-          </svg>
-          <div className="flex items-baseline gap-2 sm:flex-col sm:gap-0">
-            <p className="text-[11px] text-white tracking-wide">Time Remaining</p>
-            <p className="text-lg font-bold text-white leading-tight">{timeLabel}</p>
+    <div className="flex h-screen flex-col bg-jft-app font-jp text-jft-ink">
+      <div className="sticky top-0 z-30 shadow-sm">
+        <div className="bg-jft-bar text-white">
+          <div className="flex h-11 items-center justify-between gap-3 px-3 sm:px-5">
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="hidden shrink-0 rounded-sm bg-white/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-white/70 sm:inline">Section</span>
+              <span className="truncate text-xs font-semibold sm:text-sm">{currentSectionName}</span>
+              <span className="hidden truncate text-[11px] text-white/40 lg:inline">• {testTitle}</span>
+            </div>
+            <div className="flex shrink-0 items-center gap-2 sm:gap-4">
+              <button
+                onClick={handleFinishSection}
+                className="shrink-0 rounded bg-[#f0c885] px-2.5 py-1 text-[11px] font-bold text-gray-900 transition-colors hover:bg-[#e0b875] sm:px-3 sm:text-xs"
+              >
+                Finish Section
+              </button>
+              <span className={`flex items-center gap-1.5 rounded px-2 py-1 font-mono text-sm font-bold tabular-nums sm:text-base ${isExpired ? 'bg-jft-warnDeep text-white' : 'text-white'}`} role="timer" aria-label="Sisa waktu">
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                {timeLabel}
+              </span>
+            </div>
           </div>
         </div>
-      </div>
-
-      {/* ── Subheader (Green) ── */}
-      <div className="flex items-center justify-between bg-[#5e8b5d] px-4 py-1.5 border-b border-[#4d7a4c] md:px-6">
-        <p className="min-w-0 truncate text-[13px] text-white">
-          <span className="font-bold">Test: </span>
-          <span className="font-normal">{testTitle}</span>
-        </p>
-        {/* Calculator Icon */}
-        <button
-          onClick={() => setShowCalc((v) => !v)}
-          className="shrink-0 text-white opacity-90 hover:opacity-100 transition-opacity cursor-pointer"
-        >
-          <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-7-2h2v-2h-2v2zm0-4h2v-2h-2v2zm0-4h2V7h-2v2zm-4 8h2v-2H8v2zm0-4h2v-2H8v2zm0-4h2V7H8v2zm8 8h2v-2h-2v2zm0-4h2v-2h-2v2zm0-4h2V7h-2v2z" />
-          </svg>
-        </button>
+        <div className="bg-jft-brand text-white">
+          <div className="flex h-10 items-center justify-between gap-3 px-3 sm:px-5">
+            <p className="truncate text-[11px] font-semibold tracking-wide sm:text-xs">Japan Foundation Test for Basic Japanese</p>
+            <div className="flex items-center gap-3">
+              <p className="max-w-[55%] shrink-0 truncate text-[10px] font-medium sm:text-xs">
+                <span className="text-white/60">Test:</span> {testTitle}
+              </p>
+              <button
+                onClick={() => setShowCalc((v) => !v)}
+                className="shrink-0 text-white opacity-90 hover:opacity-100 transition-opacity cursor-pointer"
+                aria-label="Calculator"
+              >
+                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-7-2h2v-2h-2v2zm0-4h2v-2h-2v2zm0-4h2V7h-2v2zm-4 8h2v-2H8v2zm0-4h2v-2H8v2zm0-4h2V7H8v2zm8 8h2v-2h-2v2zm0-4h2v-2h-2v2zm0-4h2V7h-2v2z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* ── Mobile: question navigator ── */}
@@ -357,137 +342,99 @@ export default function Quiz() {
         </aside>
 
         {/* ── Main Question Content ── */}
-        <div className="flex-1 overflow-y-auto bg-[#edf1f5] p-3 md:p-6">
-          <div className="mx-auto w-full   bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <div className="p-4 md:p-6">
-              {saveError && (
-                <div className="mb-4">
-                  <Alert variant="error">{saveError}</Alert>
-                </div>
-              )}
+        <div className="flex-1 overflow-y-auto bg-jft-app p-3 sm:px-5 sm:py-4">
+          <div className="mx-auto w-full max-w-4xl">
+            {!isExpired && saveError && (
+              <div className="mb-3">
+                <Alert variant="error">{saveError}</Alert>
+              </div>
+            )}
 
-              {/* Question Layout */}
-              <div className="mb-5 flex flex-col items-center md:mb-6">
-                {currentQuestion.image ? (
-                  <div className="w-full rounded bg-[#e2f2fa] flex justify-center relative overflow-hidden">
-                    <img
-                      src={currentQuestion.image?.startsWith('http') ? currentQuestion.image : `${ROOT_URL}/storage/${currentQuestion.image}`}
-                      alt="Question Context"
-                      className="max-h-[400px] object-contain w-full mix-blend-multiply"
-                    />
-                  </div>
-                ) : (
-                  <div className="w-full rounded bg-[#e2f2fa] p-4 min-h-[120px] md:p-6 md:min-h-[150px]">
-                    <p className="text-base font-medium text-gray-900 md:text-lg">
-                      {currentQuestion.question_text}
-                    </p>
-                  </div>
-                )}
+            <div className="rounded-md border border-jft-instrBorder bg-jft-instrBg px-4 py-3">
+              <div className="flex items-start gap-2 text-sm font-medium leading-relaxed text-jft-ink">
+                <svg className="mt-0.5 h-4 w-4 shrink-0 text-jft-sel" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd"/></svg>
+                <p>Pilih jawaban yang paling tepat untuk pertanyaan berikut.</p>
+              </div>
+            </div>
+
+            <section className="mt-3 overflow-hidden rounded-md border border-slate-300 bg-white shadow-sm" aria-label={`Soal ${sectionLocalIndex + 1}`}>
+              <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-2.5">
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="shrink-0 rounded-sm bg-jft-tag px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">{currentSectionName}</span>
+                  <span className="truncate text-xs font-medium text-slate-500">Question {sectionLocalIndex + 1} / {sectionQuestions.length}</span>
+                </div>
+                <span className={`hidden shrink-0 items-center gap-1 text-xs font-semibold sm:flex ${flagged.has(currentIndex) ? 'text-jft-warnDeep' : 'text-slate-400'}`}>
+                  <svg className={`h-3.5 w-3.5 ${flagged.has(currentIndex) ? 'fill-jft-warnDeep' : 'fill-slate-400'}`} viewBox="0 0 24 24"><path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z" /></svg>
+                  {flagged.has(currentIndex) ? 'Ditandai ragu-ragu' : 'Belum ditandai'}
+                </span>
+              </div>
+
+              <div className="px-4 py-5 sm:px-6 sm:py-6">
+                <div className="rounded-md border border-dashed border-slate-300 bg-slate-50/70 px-4 py-6 sm:px-6">
+                  {currentQuestion.image ? (
+                    <div className="mb-4 flex justify-center">
+                      <img
+                        src={currentQuestion.image?.startsWith('http') ? currentQuestion.image : `${ROOT_URL}/storage/${currentQuestion.image}`}
+                        alt="Question Context"
+                        className="max-h-[320px] w-full object-contain"
+                      />
+                    </div>
+                  ) : null}
+                  <p className="whitespace-pre-wrap font-jp text-lg font-medium leading-loose text-jft-ink sm:text-xl">{currentQuestion.question_text}</p>
+                </div>
 
                 {currentQuestion.audio && (
                   <audio controls src={currentQuestion.audio} className="mt-4 w-full" />
                 )}
 
-                {currentQuestion.image && currentQuestion.question_text && (
-                  <p className="text-base font-medium text-gray-900 mt-5 self-start w-full md:mt-6 md:text-lg">
-                    {currentQuestion.question_text}
-                  </p>
+                <fieldset className="mt-5">
+                  <legend className="sr-only">Pilihan jawaban</legend>
+                  <div className="space-y-2.5">
+                    {currentQuestion.options.map((opt) => {
+                      const sel = currentQuestion.selected_option_id === opt.id;
+                      return (
+                        <label key={opt.id} className={`flex cursor-pointer items-center gap-3 rounded-md border-2 px-3 py-3 focus-within:ring-2 focus-within:ring-jft-sel focus-within:ring-offset-2 sm:gap-4 sm:px-4 ${sel ? 'border-jft-sel bg-jft-selBg' : 'border-jft-optBorder bg-white hover:bg-slate-50'}`}>
+                          <input type="radio" name={`q-${currentQuestion.id}`} className="sr-only" checked={sel} disabled={isExpired} onChange={() => handleSelectOption(opt.id)} />
+                          <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-sm border-2 text-sm font-bold ${sel ? 'border-jft-sel bg-jft-sel text-white' : 'border-jft-optBorder text-jft-ink'}`}>{opt.option}</span>
+                          <span className="flex-1 font-jp text-base leading-relaxed sm:text-lg">{opt.option_text}</span>
+                          {sel && <svg className="h-5 w-5 shrink-0 text-jft-sel" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>}
+                        </label>
+                      );
+                    })}
+                  </div>
+                </fieldset>
+
+                {currentQuestion.selected_option_id != null && (
+                  <button type="button" className="mt-3 text-xs font-medium text-slate-500 underline underline-offset-2 hover:text-jft-ink" onClick={() => handleSelectOption(null as unknown as number)}>Hapus jawaban</button>
                 )}
               </div>
-
-              {/* Options - Vertical Stack */}
-              <div className="flex flex-col gap-2.5 md:gap-3">
-                {currentQuestion.options.map((opt) => {
-                  const isSelected = currentQuestion.selected_option_id === opt.id;
-                  return (
-                    <button
-                      key={opt.id}
-                      onClick={() => handleSelectOption(opt.id)}
-                      disabled={isExpired}
-                      className={`flex w-full items-center gap-3 rounded border p-3 text-left transition-colors disabled:opacity-50 md:gap-4 ${
-                        isSelected
-                          ? 'border-[#5e8b5d] bg-[#f2f8f2]'
-                          : 'border-gray-300 bg-white hover:bg-gray-50'
-                      }`}
-                    >
-                      <span
-                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
-                          isSelected
-                            ? 'bg-[#5e8b5d] text-white'
-                            : 'bg-[#eef2f7] text-gray-600'
-                        }`}
-                      >
-                        {opt.option}
-                      </span>
-                      <span className="text-sm text-gray-800 md:text-base">{opt.option_text}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+            </section>
           </div>
         </div>
       </div>
 
       {/* ── Footer ── */}
-      <div className="flex items-center justify-between gap-2 bg-[#1f2022] px-3 py-2 md:px-6">
-        <div className="flex items-center gap-3">
-          {/* Fake Visual Toggles (desktop only) */}
-          <div className="hidden items-center gap-2 md:flex">
-            <div className="flex h-6 w-12 items-center rounded-full bg-[#36c073] p-1">
-              <div className="h-4 w-4 rounded-full bg-white flex items-center justify-center">
-                <span className="text-[10px] font-bold text-[#36c073]">A</span>
-              </div>
-            </div>
-            <div className="flex h-6 w-12 items-center rounded-full bg-[#4682ea] p-1">
-              <div className="h-4 w-4 rounded-full bg-white flex items-center justify-center">
-                <svg className="w-3 h-3 text-[#4682ea]" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
-                </svg>
-              </div>
-            </div>
+      <footer className="sticky bottom-0 z-20 border-t-2 border-slate-300 bg-white">
+        <div className="mx-auto flex max-w-4xl flex-nowrap items-center justify-between gap-2 px-3 py-2.5 sm:px-5">
+          <button type="button" className="btn-jft-outline shrink-0 whitespace-nowrap px-3 py-2 text-sm font-medium inline-flex items-center gap-1.5" disabled={currentIndex === 0} onClick={() => setCurrentIndex((i) => Math.max(0, i - 1))}>
+            <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+            Sebelumnya
+          </button>
+          <div className="flex flex-nowrap items-center justify-end gap-2">
+            <button type="button" aria-pressed={flagged.has(currentIndex)} onClick={() => toggleFlag(currentIndex)}
+              className={`px-3 py-2 rounded-md text-sm font-medium border inline-flex items-center gap-1.5 whitespace-nowrap ${flagged.has(currentIndex) ? 'border-jft-warn bg-amber-50 text-jft-warnDeep' : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-50'}`}>
+              <svg className={`h-4 w-4 ${flagged.has(currentIndex) ? 'fill-jft-warnDeep' : 'fill-slate-600'}`} viewBox="0 0 24 24"><path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z" /></svg>
+              {flagged.has(currentIndex) ? 'Ragu-ragu' : 'Tandai Ragu-ragu'}
+            </button>
+            {currentIndex < questions.length - 1 && (
+              <button type="button" className="btn-jft px-3 py-2 text-sm font-medium inline-flex items-center gap-1.5" onClick={() => setCurrentIndex((i) => Math.min(questions.length - 1, i + 1))}>Selanjutnya<svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd"/></svg></button>
+            )}
+            <button type="button" className="btn-jft px-3 py-2 text-sm font-medium inline-flex items-center gap-1.5 whitespace-nowrap" onClick={() => setShowConfirm(true)}>
+              {currentIndex < questions.length - 1 ? 'Akhiri Bagian' : 'Selesai'}<svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd"/></svg>
+            </button>
           </div>
         </div>
-
-        <button
-          onClick={() => toggleFlag(currentIndex)}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded bg-[#405640] transition-colors hover:bg-[#4d664d] md:h-9 md:w-10"
-          aria-label="Flag"
-        >
-          <svg
-            className={`h-4 w-4 ${flagged.has(currentIndex) ? 'fill-[#f0c885]' : 'fill-white'}`}
-            viewBox="0 0 24 24"
-          >
-            <path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z" />
-          </svg>
-        </button>
-
-        <div className="flex flex-1 items-center justify-end gap-2 md:gap-3">
-          <button
-            onClick={() => setCurrentIndex((i) => Math.max(0, i - 1))}
-            disabled={currentIndex === 0}
-            className="rounded bg-[#405640] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#4d664d] disabled:opacity-50 md:px-5"
-          >
-            &lt; Back
-          </button>
-
-          {currentIndex < questions.length - 1 ? (
-            <button
-              onClick={() => setCurrentIndex((i) => Math.min(questions.length - 1, i + 1))}
-              className="rounded bg-[#5e8b5d] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#4d7a4c] md:px-5"
-            >
-              Next &gt;
-            </button>
-          ) : (
-            <button
-              onClick={() => setShowConfirm(true)}
-              className="rounded bg-[#5e8b5d] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#4d7a4c]"
-            >
-              Finish
-            </button>
-          )}
-        </div>
-      </div>
+      </footer>
 
       {/* ── Confirm modal ── */}
       <Modal isOpen={showConfirm} onClose={() => setShowConfirm(false)}>
@@ -562,7 +509,6 @@ export default function Quiz() {
           </div>
         </div>
       </Modal>
-
       <DraggableCalculator isOpen={showCalc} onClose={() => setShowCalc(false)} />
     </div>
   );
